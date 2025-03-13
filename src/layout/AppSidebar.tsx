@@ -14,6 +14,7 @@ import {
   PlugInIcon,
   TableIcon,
   UserCircleIcon,
+  MailIcon, // Assuming InboxIcon is imported
 } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
 import SidebarWidget from "./SidebarWidget";
@@ -28,35 +29,46 @@ type NavItem = {
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    name: "Панель управления",
+    subItems: [{ name: "Основная панель", path: "/main-dashboard", pro: false }],
   },
-  {
-    icon: <CalenderIcon />,
-    name: "Calendar",
-    path: "/calendar",
-  },
+  
   {
     icon: <UserCircleIcon />,
-    name: "User Profile",
+    name: "Профиль пользователя",
     path: "/profile",
   },
   {
-    name: "Forms",
+    icon: <MailIcon/>,
+    name: "Email",
+    subItems: [{ name: "Входящие", path: "/inbox", pro: false }],
+  },
+  {
+    name: "КП",
+    icon: <PageIcon />,
+    subItems: [{ name: "Форма создания КП", path: "/kp-manual-generation", pro: false },],
+  },
+  {
+    name: "Формы",
     icon: <ListIcon />,
-    subItems: [{ name: "Form Elements", path: "/form-elements", pro: false }],
+    subItems: [{ name: "Элементы формы", path: "/form-elements", pro: false }],
   },
   {
-    name: "Tables",
+    name: "Таблицы",
     icon: <TableIcon />,
-    subItems: [{ name: "Basic Tables", path: "/basic-tables", pro: false }],
+    subItems: [{ name: "Основные таблицы", path: "/basic-tables", pro: false }],
   },
   {
-    name: "Pages",
+    icon: <CalenderIcon />,
+    name: "Календарь",
+    path: "/calendar",
+  },
+  {
+    name: "Страницы",
     icon: <PageIcon />,
     subItems: [
-      { name: "Blank Page", path: "/blank", pro: false },
-      { name: "404 Error", path: "/error-404", pro: false },
+      { name: "Пустая страница", path: "/blank", pro: false },
+      { name: "Ошибка 404", path: "/error-404", pro: false },
     ],
   },
 ];
@@ -64,30 +76,30 @@ const navItems: NavItem[] = [
 const othersItems: NavItem[] = [
   {
     icon: <PieChartIcon />,
-    name: "Charts",
+    name: "Диаграммы",
     subItems: [
-      { name: "Line Chart", path: "/line-chart", pro: false },
-      { name: "Bar Chart", path: "/bar-chart", pro: false },
+      { name: "Линейная диаграмма", path: "/line-chart", pro: false },
+      { name: "Гистограмма", path: "/bar-chart", pro: false },
     ],
   },
   {
     icon: <BoxCubeIcon />,
-    name: "UI Elements",
+    name: "Элементы UI",
     subItems: [
-      { name: "Alerts", path: "/alerts", pro: false },
-      { name: "Avatar", path: "/avatars", pro: false },
-      { name: "Badge", path: "/badge", pro: false },
-      { name: "Buttons", path: "/buttons", pro: false },
-      { name: "Images", path: "/images", pro: false },
-      { name: "Videos", path: "/videos", pro: false },
+      { name: "Оповещения", path: "/alerts", pro: false },
+      { name: "Аватары", path: "/avatars", pro: false },
+      { name: "Значок", path: "/badge", pro: false },
+      { name: "Кнопки", path: "/buttons", pro: false },
+      { name: "Изображения", path: "/images", pro: false },
+      { name: "Видео", path: "/videos", pro: false },
     ],
   },
   {
     icon: <PlugInIcon />,
-    name: "Authentication",
+    name: "Аутентификация",
     subItems: [
-      { name: "Sign In", path: "/signin", pro: false },
-      { name: "Sign Up", path: "/signup", pro: false },
+      { name: "Вход", path: "/signin", pro: false },
+      { name: "Регистрация", path: "/signup", pro: false },
     ],
   },
 ];
@@ -343,7 +355,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Menu"
+                  "Меню"
                 ) : (
                   <HorizontaLDots className="size-6" />
                 )}
@@ -359,7 +371,7 @@ const AppSidebar: React.FC = () => {
                 }`}
               >
                 {isExpanded || isHovered || isMobileOpen ? (
-                  "Others"
+                  "Прочее"
                 ) : (
                   <HorizontaLDots />
                 )}

@@ -19,6 +19,7 @@ import AppLayout from "./layout/AppLayout";
 import { ScrollToTop } from "./components/common/ScrollToTop";
 import MainDashboard from "./pages/Dashboard/MainDashboard";
 import Home from "./pages/LandingHome/Home";
+import Inbox from "./pages/Inbox/Inbox";
 
 export default function App() {
   return (
@@ -29,6 +30,7 @@ export default function App() {
           {/* Dashboard Layout */}
           <Route element={<AppLayout />}>
             <Route path="/main-dashboard" element={<MainDashboard />} />
+            <Route path="/inbox" element={<Inbox />} />
 
             {/* Others Page */}
             <Route path="/profile" element={<UserProfiles />} />
