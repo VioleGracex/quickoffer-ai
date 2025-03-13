@@ -1,104 +1,81 @@
-import React from "react";
+import { Link } from "react-router-dom";
 
 const FooterHome = () => {
   return (
-    <div>
-      <div className="w-[1440px] px-16 py-20 bg-Color-Scheme-1-Background inline-flex flex-col justify-start items-center gap-20">
-        <div className="self-stretch inline-flex justify-between items-start">
-          <div className="inline-flex flex-col justify-start items-start gap-8">
-            <div className="flex flex-col justify-start items-start gap-6 overflow-hidden">
-              <div
-                data-alternate="False"
-                className="w-[84px] h-9 relative overflow-hidden"
-              >
-                <div className="w-[70px] h-9 left-[6.67px] top-0 absolute overflow-hidden">
-                  <div className="w-[18.81px] h-[15.95px] left-[50.82px] top-[10.87px] absolute bg-Color-Neutral-Darkest" />
-                  <div className="w-[19.44px] h-[24.68px] left-[34.33px] top-[11.32px] absolute bg-Color-Neutral-Darkest" />
-                  <div className="w-[18.81px] h-[15.95px] left-[18.55px] top-[10.87px] absolute bg-Color-Neutral-Darkest" />
-                  <div className="w-[21.60px] h-[16.19px] left-0 top-[10.24px] absolute bg-Color-Neutral-Darkest" />
-                  <div className="w-[15.13px] h-[9.29px] left-[1.15px] top-0 absolute bg-Color-Neutral-Darkest" />
-                </div>
-              </div>
+    <footer className="w-full bg-white py-20">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-16 flex flex-col items-center gap-20">
+        <div className="w-full flex flex-col md:flex-row justify-between items-start gap-8">
+          <div className="flex flex-col justify-start items-start gap-8">
+            <div className="flex items-center gap-2">
+              {/* <div className="w-12 h-12 bg-black" /> */} {/* logo */}
+              <span className="text-xl font-bold">QuickOfferAI</span>
             </div>
-            <div className="w-[493px] inline-flex justify-start items-start gap-8">
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-semibold font-['Roboto'] leading-[21px]">
+            <div className="flex flex-wrap gap-4">
+              <Link to="/about" className="text-sm font-semibold text-black hover:text-gray-800 transition-colors">
                 О нас
-              </div>
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-semibold font-['Roboto'] leading-[21px]">
+              </Link>
+              <Link to="/contact" className="text-sm font-semibold text-black hover:text-gray-800 transition-colors">
                 Контакты
-              </div>
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-semibold font-['Roboto'] leading-[21px]">
+              </Link>
+              <Link to="/terms" className="text-sm font-semibold text-black hover:text-gray-800 transition-colors">
                 Условия использования
-              </div>
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-semibold font-['Roboto'] leading-[21px]">
+              </Link>
+              <Link to="/settings" className="text-sm font-semibold text-black hover:text-gray-800 transition-colors">
                 Настройки файлов
-              </div>
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-semibold font-['Roboto'] leading-[21px]">
+              </Link>
+              <Link to="/subscribe" className="text-sm font-semibold text-black hover:text-gray-800 transition-colors">
                 Подписка
-              </div>
+              </Link>
             </div>
           </div>
-          <div className="w-[400px] inline-flex flex-col justify-start items-start gap-4">
-            <div className="self-stretch justify-start text-Color-Scheme-1-Text text-base font-semibold font-['Roboto'] leading-normal">
-              Подписаться
-            </div>
-            <div className="self-stretch flex flex-col justify-start items-start gap-3">
-              <div className="self-stretch h-12 inline-flex justify-start items-start gap-4">
-                <div
-                  data-alternate="False"
-                  data-type="Default"
-                  className="flex-1 p-3 outline outline-1 outline-Color-Neutral-Darkest flex justify-start items-center gap-2"
+          <div className="w-full md:w-[400px] flex flex-col justify-start items-start gap-4">
+            <span className="text-base font-semibold text-black">Подписаться</span>
+            <div className="flex flex-col gap-3 w-full">
+              <div className="flex w-full h-12 gap-4">
+                <input
+                  type="email"
+                  placeholder="Введите ваш email"
+                  className="flex-1 p-3 border border-black text-black placeholder-gray-600 outline-none"
+                />
+                <Link
+                  to="/subscribe"
+                  className="px-6 py-3 bg-black text-white text-base font-normal hover:bg-gray-800 transition-colors"
                 >
-                  <div className="flex-1 justify-start text-black/60 text-base font-normal font-['Roboto'] leading-normal">
-                    Введите ваш email
-                  </div>
-                </div>
-                <div
-                  data-alternate="False"
-                  data-icon-position="No icon"
-                  data-small="False"
-                  data-style="Secondary"
-                  className="px-6 py-3 outline outline-1 outline-Color-Neutral-Darkest flex justify-center items-center gap-2"
-                >
-                  <div className="justify-start text-Color-Neutral-Darkest text-base font-normal font-['Roboto'] leading-normal">
-                    Подписаться
-                  </div>
-                </div>
+                  Подписаться
+                </Link>
               </div>
-              <div className="self-stretch h-[18px] inline-flex justify-start items-start gap-1">
-                <div className="justify-start text-Color-Scheme-1-Text text-xs font-normal font-['Roboto'] leading-[18px]">
-                  Подписываясь, вы соглашаетесь с нашей Политикой
-                  конфиденциальности
-                </div>
-                <div className="justify-start text-Color-Scheme-1-Text text-xs font-normal font-['Roboto'] underline leading-[18px]">
-                  Подписываясь, вы соглашаетесь с нашей Политикой
-                  конфиденциальности
-                </div>
+              <div className="flex flex-col md:flex-row justify-start items-start gap-1">
+                <span className="text-xs font-normal text-black">
+                  Подписываясь, вы соглашаетесь с нашей 
+                </span>
+                <Link to="/privacy" className="text-xs font-normal text-black underline">
+                  Политикой конфиденциальности
+                </Link>
               </div>
             </div>
           </div>
         </div>
-        <div className="self-stretch flex flex-col justify-start items-center gap-8">
-          <div className="self-stretch h-0 outline outline-1 outline-offset-[-0.50px] outline-Color-Scheme-1-Border"></div>
-          <div className="self-stretch inline-flex justify-between items-start">
-            <div className="flex justify-start items-start gap-6">
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-normal font-['Roboto'] underline leading-[21px]">
+        <div className="w-full flex flex-col items-center gap-8">
+          <div className="w-full h-px bg-black"></div>
+          <div className="w-full flex flex-col md:flex-row justify-between items-start gap-4">
+            <div className="flex flex-wrap gap-6">
+              <Link to="/privacy" className="text-sm font-normal text-black underline hover:text-gray-800 transition-colors">
                 Политика конфиденциальности
-              </div>
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-normal font-['Roboto'] underline leading-[21px]">
+              </Link>
+              <Link to="/terms" className="text-sm font-normal text-black underline hover:text-gray-800 transition-colors">
                 Условия обслуживания
-              </div>
-              <div className="justify-start text-Color-Scheme-1-Text text-sm font-normal font-['Roboto'] underline leading-[21px]">
+              </Link>
+              <Link to="/settings" className="text-sm font-normal text-black underline hover:text-gray-800 transition-colors">
                 Настройки файлов
-              </div>
+              </Link>
             </div>
-            <div className="justify-start text-Color-Scheme-1-Text text-sm font-normal font-['Roboto'] leading-[21px]">
-              © 2025 Relume. Все права защищены.
-            </div>
+            <span className="text-sm font-normal text-black">
+              © 2025 QuickOfferAI. Все права защищены.
+            </span>
           </div>
         </div>
       </div>
-    </div>
+    </footer>
   );
 };
 

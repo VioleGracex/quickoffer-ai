@@ -1,114 +1,58 @@
+import { Link } from "react-router-dom";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faChevronRight } from "@fortawesome/free-solid-svg-icons";
+
 const Section2 = () => {
   return (
-    <div>
-      <div className="w-[1440px] px-16 py-28 bg-Color-Scheme-1-Background inline-flex flex-col justify-start items-start gap-20 overflow-hidden">
-        <div className="w-[768px] justify-start text-Color-Scheme-1-Text text-[40px] font-bold font-['Roboto'] leading-[48px]">
-          Простой процесс создания коммерческих предложений с помощью ИИ за три
-          шага
-        </div>
-        <div className="self-stretch flex flex-col justify-start items-start gap-16">
-          <div className="self-stretch inline-flex justify-center items-start gap-12">
-            <div className="flex-1 inline-flex flex-col justify-start items-start gap-8 overflow-hidden">
-              <img
-                className="self-stretch h-60"
-                src="https://placehold.co/405x240"
-              />
-              <div className="self-stretch flex flex-col justify-start items-start gap-8">
-                <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                  <div className="self-stretch justify-start text-Color-Scheme-1-Text text-2xl font-bold font-['Roboto'] leading-[33.60px]">
-                    Легко загружайте шаблоны и вводите данные клиентов в чат
-                  </div>
-                  <div className="self-stretch justify-start text-Color-Scheme-1-Text text-base font-normal font-['Roboto'] leading-normal">
-                    Следуйте этим простым шагам, чтобы быстро создать
-                    профессиональное предложение.
-                  </div>
-                </div>
-                <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                  <div
-                    data-alternate="False"
-                    data-icon-position="Trailing"
-                    data-small="False"
-                    data-style="Link"
-                    className="inline-flex justify-center items-center gap-2 overflow-hidden"
-                  >
-                    <div className="justify-start text-Color-Neutral-Darkest text-base font-normal font-['Roboto'] leading-normal">
-                      Начать
-                    </div>
-                    <div className="w-6 h-6 relative overflow-hidden">
-                      <div className="w-[7.12px] h-[11.41px] left-[8.29px] top-[5.54px] absolute bg-Color-Scheme-1-Text" />
-                    </div>
-                  </div>
-                </div>
-              </div>
+    <section id="section2" className="w-full bg-white">
+      <div className="max-w-[1440px] mx-auto px-4 md:px-16 py-20 flex flex-col justify-start items-center">
+        <h2 className="text-black text-[40px] font-bold font-['Roboto'] leading-[48px] mb-8 text-center">
+          Простой процесс создания коммерческих предложений с помощью ИИ за три шага
+        </h2>
+        <div className="flex flex-col md:flex-row justify-center items-start gap-8 md:gap-20">
+          {[
+            {
+              title: "Легко загружайте шаблоны и вводите данные клиентов в чат",
+              text: "Следуйте этим простым шагам, чтобы быстро создать профессиональное предложение.",
+              linkText: "Начать",
+              linkHref: "/start",
+              imgSrc: "https://placehold.co/405x240"
+            },
+            {
+              title: "Загрузите шаблон в формате PDF, Excel, PNG или JPG",
+              text: "Просто выберите файл и загрузите его в систему.",
+              linkText: "Далее",
+              linkHref: "/next",
+              imgSrc: "https://placehold.co/405x240"
+            },
+            {
+              title: "Введите данные клиента и детали сделки в удобном интерфейсе",
+              text: "Просто введите информацию в чат, и мы все сделаем за вас.",
+              linkText: "Создать",
+              linkHref: "/create",
+              imgSrc: "https://placehold.co/405x240"
+            }
+          ].map((item, index) => (
+            <div key={index} className="flex-1 flex flex-col justify-start items-center md:items-start gap-4">
+              <img className="w-full h-auto" src={item.imgSrc} alt="Placeholder" />
+              <h3 className="text-black text-2xl font-bold font-['Roboto'] leading-[33.60px] text-center md:text-left">
+                {item.title}
+              </h3>
+              <p className="text-black text-base font-normal font-['Roboto'] leading-normal text-center md:text-left">
+                {item.text}
+              </p>
+              <Link
+                to={item.linkHref}
+                className="flex items-center text-black text-base font-normal font-['Roboto'] leading-normal"
+              >
+                {item.linkText}
+                <FontAwesomeIcon icon={faChevronRight} className="ml-2" />
+              </Link>
             </div>
-            <div className="flex-1 inline-flex flex-col justify-start items-start gap-8 overflow-hidden">
-              <img
-                className="self-stretch h-60"
-                src="https://placehold.co/405x240"
-              />
-              <div className="self-stretch flex flex-col justify-start items-start gap-8">
-                <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                  <div className="self-stretch justify-start text-Color-Scheme-1-Text text-2xl font-bold font-['Roboto'] leading-[33.60px]">
-                    Загрузите шаблон в формате PDF, Excel, PNG или JPG
-                  </div>
-                  <div className="self-stretch justify-start text-Color-Scheme-1-Text text-base font-normal font-['Roboto'] leading-normal">
-                    Просто выберите файл и загрузите его в систему.
-                  </div>
-                </div>
-                <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                  <div
-                    data-alternate="False"
-                    data-icon-position="Trailing"
-                    data-small="False"
-                    data-style="Link"
-                    className="inline-flex justify-center items-center gap-2 overflow-hidden"
-                  >
-                    <div className="justify-start text-Color-Neutral-Darkest text-base font-normal font-['Roboto'] leading-normal">
-                      Далее
-                    </div>
-                    <div className="w-6 h-6 relative overflow-hidden">
-                      <div className="w-[7.12px] h-[11.41px] left-[8.29px] top-[5.54px] absolute bg-Color-Scheme-1-Text" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex-1 inline-flex flex-col justify-start items-start gap-8 overflow-hidden">
-              <img
-                className="self-stretch h-60"
-                src="https://placehold.co/405x240"
-              />
-              <div className="self-stretch flex flex-col justify-start items-start gap-8">
-                <div className="self-stretch flex flex-col justify-start items-start gap-4">
-                  <div className="self-stretch justify-start text-Color-Scheme-1-Text text-2xl font-bold font-['Roboto'] leading-[33.60px]">
-                    Введите данные клиента и детали сделки в удобном интерфейсе
-                  </div>
-                  <div className="self-stretch justify-start text-Color-Scheme-1-Text text-base font-normal font-['Roboto'] leading-normal">
-                    Просто введите информацию в чат, и мы все сделаем за вас.
-                  </div>
-                </div>
-                <div className="self-stretch flex flex-col justify-start items-start gap-2">
-                  <div
-                    data-alternate="False"
-                    data-icon-position="Trailing"
-                    data-small="False"
-                    data-style="Link"
-                    className="inline-flex justify-center items-center gap-2 overflow-hidden"
-                  >
-                    <div className="justify-start text-Color-Neutral-Darkest text-base font-normal font-['Roboto'] leading-normal">
-                      Создать
-                    </div>
-                    <div className="w-6 h-6 relative overflow-hidden">
-                      <div className="w-[7.12px] h-[11.41px] left-[8.29px] top-[5.54px] absolute bg-Color-Scheme-1-Text" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
+          ))}
         </div>
       </div>
-    </div>
+    </section>
   );
 };
 

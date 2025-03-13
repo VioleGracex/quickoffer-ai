@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowUp, faBars, faTimes } from "@fortawesome/free-solid-svg-icons";
@@ -39,48 +39,69 @@ const HeaderHome = () => {
     <div>
       <header
         className={`fixed w-full top-0 z-50 transition-all ${
-          isScrolled ? "bg-white shadow-lg" : "bg-Color-Scheme-1-Background"
+          isScrolled ? "bg-white shadow-lg" : "bg-white"
         }`}
       >
         <div className="w-full max-w-[1440px] mx-auto h-16 px-4 md:px-16 flex justify-between items-center">
-          <div className="text-xl md:text-2xl font-bold text-Color-Scheme-1-Text">
+          <div className="text-xl md:text-2xl font-bold text-black">
             QuickOffer AI
           </div>
-          <nav className="hidden md:flex justify-center items-center gap-8">
+          <nav className="hidden md:flex justify-center items-center gap-8 flex-1">
             {navItems.map((item, index) => (
-              <a key={index} href={item.href} className="text-base font-normal text-Color-Scheme-1-Text">
+              <a
+                key={index}
+                href={item.href}
+                className="text-base font-normal text-black hover:text-gray-800 transition-colors"
+              >
                 {item.name}
               </a>
             ))}
-
-            <Link to="/signin" className="px-5 py-2 bg-Color-Neutral-Darkest text-Color-White text-base font-normal border border-black">
+          </nav>
+          <div className="hidden md:flex gap-4">
+            <Link
+              to="/signin"
+              className="px-5 py-2 text-black text-base font-normal border border-black hover:text-white hover:bg-gray-800 transition-colors"
+            >
               Войти
             </Link>
-            <Link to="/signup" className="px-5 py-2 bg-Color-Neutral-Дarkест text-Color-White text-base font-normal border border-black">
+            <Link
+              to="/signup"
+              className="px-5 py-2 text-black text-base font-normal border border-black hover:text-white hover:bg-gray-800 transition-colors"
+            >
               Регистрация
             </Link>
-          </nav>
+          </div>
           <div className="md:hidden flex items-center">
             <button
               onClick={toggleMenu}
-              className="p-2 bg-Color-Neutral-Darkest text-Color-White rounded"
+              className="p-2 bg-black text-white rounded hover:bg-gray-800 transition-colors"
             >
               <FontAwesomeIcon icon={menuOpen ? faTimes : faBars} />
             </button>
           </div>
         </div>
         {menuOpen && (
-          <div className="fixed inset-0 bg-Color-Scheme-1-Background z-40">
+          <div className="fixed inset-0 bg-white z-40">
             <nav className="flex flex-col items-center gap-4 p-4">
               {navItems.map((item, index) => (
-                <a key={index} href={item.href} className="text-base font-normal text-Color-Scheme-1-Text">
+                <a
+                  key={index}
+                  href={item.href}
+                  className="text-base font-normal text-black hover:text-gray-800 transition-colors"
+                >
                   {item.name}
                 </a>
               ))}
-              <Link to="/signin" className="px-5 py-2 bg-Color-Neutral-Darkest text-Color-White text-base font-normal">
+              <Link
+                to="/signin"
+                className="px-5 py-2 bg-black text-white text-base font-normal hover:bg-gray-800 transition-colors"
+              >
                 Войти
               </Link>
-              <Link to="/signup" className="px-5 py-2 bg-Color-Neutral-Дarkест text-Color-White text-base font-normal">
+              <Link
+                to="/signup"
+                className="px-5 py-2 bg-black text-white text-base font-normal hover:bg-gray-800 transition-colors"
+              >
                 Регистрация
               </Link>
             </nav>
@@ -90,7 +111,7 @@ const HeaderHome = () => {
       {showTopButton && (
         <button
           onClick={scrollToTop}
-          className="fixed bottom-4 right-4 p-3 bg-Color-Neutral-Darkest text-Color-White rounded-full shadow-lg"
+          className="fixed bottom-4 right-4 p-3 bg-black text-white rounded-full shadow-lg hover:bg-gray-800 transition-colors"
         >
           <FontAwesomeIcon icon={faArrowUp} />
         </button>
