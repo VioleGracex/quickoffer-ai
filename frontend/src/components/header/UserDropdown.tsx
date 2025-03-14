@@ -1,7 +1,7 @@
-import { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { DropdownItem } from "../ui/dropdown/DropdownItem";
 import { Dropdown } from "../ui/dropdown/Dropdown";
-import { Link } from "react-router";
+import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faCog, faQuestionCircle, faSignOutAlt, faChevronDown } from "@fortawesome/free-solid-svg-icons";
 import useAuth from "../../routes/useAuth";
@@ -26,7 +26,15 @@ const dropdownItems = [
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, signOut } = useAuth();
+  const { user, fetchUserDetails } = useAuth();
+  const {signOut} = useAuth();
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserDetails(token);
+    }
+  }, []);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);

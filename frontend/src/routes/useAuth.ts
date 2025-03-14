@@ -21,6 +21,7 @@ const useAuth = () => {
   const [error, setError] = useState<string | null>(null);
 
   const fetchUserDetails = async (token: string): Promise<void> => {
+    setLoading(true);
     try {
       const response = await api.get<User>('/users/me/', {
         headers: {
@@ -53,7 +54,7 @@ const useAuth = () => {
 
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      await fetchUserDetails(access_token);  // Fetch user details after login
+      console.log("Token set:", access_token);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
     } finally {
@@ -66,6 +67,7 @@ const useAuth = () => {
     setError(null);
     try {
       await api.post<User>('/users/', userData);
+      console.log("User signed up:", userData);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
       throw err;
@@ -77,6 +79,7 @@ const useAuth = () => {
   const signOut = (): void => {
     localStorage.removeItem('token');
     setUser(null);
+    console.log("User signed out, token removed");
   };
 
   return {

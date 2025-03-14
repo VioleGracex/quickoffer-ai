@@ -5,22 +5,22 @@ import ChartTab from "../common/ChartTab";
 export default function StatisticsChart() {
   const options: ApexOptions = {
     legend: {
-      show: false, // Hide legend
+      show: false, // Скрыть легенду
       position: "top",
       horizontalAlign: "left",
     },
-    colors: ["#465FFF", "#9CB9FF"], // Define line colors
+    colors: ["#465FFF", "#9CB9FF"], // Определить цвета линий
     chart: {
       fontFamily: "Outfit, sans-serif",
       height: 310,
-      type: "line", // Set the chart type to 'line'
+      type: "line", // Установить тип диаграммы на 'line'
       toolbar: {
-        show: false, // Hide chart toolbar
+        show: false, // Скрыть панель инструментов диаграммы
       },
     },
     stroke: {
-      curve: "straight", // Define the line style (straight, smooth, or step)
-      width: [2, 2], // Line width for each dataset
+      curve: "straight", // Определить стиль линии (прямой, сглаженный или ступенчатый)
+      width: [2, 2], // Ширина линии для каждого набора данных
     },
 
     fill: {
@@ -31,69 +31,69 @@ export default function StatisticsChart() {
       },
     },
     markers: {
-      size: 0, // Size of the marker points
-      strokeColors: "#fff", // Marker border color
+      size: 0, // Размер маркеров точек
+      strokeColors: "#fff", // Цвет границы маркера
       strokeWidth: 2,
       hover: {
-        size: 6, // Marker size on hover
+        size: 6, // Размер маркера при наведении
       },
     },
     grid: {
       xaxis: {
         lines: {
-          show: false, // Hide grid lines on x-axis
+          show: false, // Скрыть линии сетки по оси x
         },
       },
       yaxis: {
         lines: {
-          show: true, // Show grid lines on y-axis
+          show: true, // Показать линии сетки по оси y
         },
       },
     },
     dataLabels: {
-      enabled: false, // Disable data labels
+      enabled: false, // Отключить метки данных
     },
     tooltip: {
-      enabled: true, // Enable tooltip
+      enabled: true, // Включить всплывающие подсказки
       x: {
-        format: "dd MMM yyyy", // Format for x-axis tooltip
+        format: "dd MMM yyyy", // Формат для всплывающих подсказок по оси x
       },
     },
     xaxis: {
-      type: "category", // Category-based x-axis
+      type: "category", // Основанная на категориях ось x
       categories: [
-        "Jan",
-        "Feb",
-        "Mar",
-        "Apr",
-        "May",
-        "Jun",
-        "Jul",
-        "Aug",
-        "Sep",
-        "Oct",
-        "Nov",
-        "Dec",
+        "Янв",
+        "Фев",
+        "Мар",
+        "Апр",
+        "Май",
+        "Июн",
+        "Июл",
+        "Авг",
+        "Сен",
+        "Окт",
+        "Ноя",
+        "Дек",
       ],
       axisBorder: {
-        show: false, // Hide x-axis border
+        show: false, // Скрыть границу оси x
       },
       axisTicks: {
-        show: false, // Hide x-axis ticks
+        show: false, // Скрыть отметки оси x
       },
       tooltip: {
-        enabled: false, // Disable tooltip for x-axis points
+        enabled: false, // Отключить всплывающие подсказки для точек оси x
       },
     },
     yaxis: {
       labels: {
         style: {
-          fontSize: "12px", // Adjust font size for y-axis labels
-          colors: ["#6B7280"], // Color of the labels
+          fontSize: "12px", // Настроить размер шрифта для меток оси y
+          colors: ["#6B7280"], // Цвет меток
         },
       },
       title: {
-        text: "", // Remove y-axis title
+        text: "", // Удалить заголовок оси y
         style: {
           fontSize: "0px",
         },
@@ -103,11 +103,11 @@ export default function StatisticsChart() {
 
   const series = [
     {
-      name: "Sales",
+      name: "Продажи",
       data: [180, 190, 170, 160, 175, 165, 170, 205, 230, 210, 240, 235],
     },
     {
-      name: "Revenue",
+      name: "Доход",
       data: [40, 30, 50, 40, 55, 40, 70, 100, 110, 120, 150, 140],
     },
   ];
@@ -116,10 +116,10 @@ export default function StatisticsChart() {
       <div className="flex flex-col gap-5 mb-6 sm:flex-row sm:justify-between">
         <div className="w-full">
           <h3 className="text-lg font-semibold text-gray-800 dark:text-white/90">
-            Statistics
+            Статистика
           </h3>
           <p className="mt-1 text-gray-500 text-theme-sm dark:text-gray-400">
-            Target you’ve set for each month
+            Цель, которую вы установили на каждый месяц
           </p>
         </div>
         <div className="flex items-start w-full gap-3 sm:justify-end">

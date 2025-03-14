@@ -2,8 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Route, Navigate, Outlet } from 'react-router-dom';
 import useAuth from '../routes/useAuth';
 
-const PrivateRoute = () => {
-  const { fetchUserDetails } = useAuth();
+const PublicRoute = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
 
   useEffect(() => {
@@ -11,7 +10,7 @@ const PrivateRoute = () => {
       const token = localStorage.getItem('token');
       if (token) {
         try {
-          await fetchUserDetails(token);
+          //await fetchUserDetails(token);
           setIsAuthenticated(true);
         } catch (error) {
           setIsAuthenticated(false);
@@ -27,7 +26,7 @@ const PrivateRoute = () => {
     return <div>Loading...</div>; // Or a loading spinner
   }
 
-  return isAuthenticated ? <Outlet /> : <Navigate to="/signin" />;
+  return isAuthenticated ? <Navigate to="/main-dashboard" /> : <Outlet />;
 };
 
-export default PrivateRoute;
+export default PublicRoute;
