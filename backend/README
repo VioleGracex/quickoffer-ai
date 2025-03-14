@@ -1,0 +1,32 @@
+cd backend
+python -m uvicorn app.main:app --reload 
+
+# Open Command Prompt and navigate to your project directory
+cd D:\Freelance\InProgress\quickoffer-ai\backend\app
+
+# Create a virtual environment named 'venv'
+python -m venv venv
+
+# Activate the virtual environment
+.\venv\Scripts\activate
+
+# Install required packages from requirements.txt
+pip install -r requirements.txt
+
+# When you are done working in the virtual environment, you can deactivate it by simply running:
+deactivate
+
+
+Generate SSL Certificates
+If you haven't already, generate SSL certificates. For testing purposes, you can use self-signed certificates. For production, use a trusted Certificate Authority (CA) like Let's Encrypt.
+
+2. Update your FastAPI Application
+You do not need to change your FastAPI application code to switch between HTTP and HTTPS. Instead, you configure this at the server level.
+
+3. Run FastAPI with HTTPS using Uvicorn
+When you run your FastAPI application using uvicorn, you can specify the SSL certificate and key files as command-line arguments.
+
+Here’s an example of how to do it:
+
+# bash
+uvicorn app.main:app --host 0.0.0.0 --port 443 --ssl-keyfile=path/to/key.pem --ssl-certfile=path/to/cert.pem
