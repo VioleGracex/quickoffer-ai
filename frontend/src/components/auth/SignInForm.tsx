@@ -50,7 +50,7 @@ export default function SignInForm() {
 
     try {
       await signIn(email, password);
-      navigate("/dashboard");
+      navigate("/main-dashboard");
     } catch (err) {
       console.error("Error during sign-in:", err);
     }

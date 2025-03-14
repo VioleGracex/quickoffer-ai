@@ -1,4 +1,4 @@
-""" from typing import List
+from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
@@ -89,4 +89,4 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     user = services.get_user_by_email(db, email=email)
     if user is None:
         raise credentials_exception
-    return user """
+    return user
