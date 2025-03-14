@@ -3,6 +3,8 @@ from typing import Optional
 
 # Shared properties
 class UserBase(BaseModel):
+    first_name: str
+    last_name: str
     email: EmailStr
     is_active: Optional[bool] = True
     is_superuser: Optional[bool] = False

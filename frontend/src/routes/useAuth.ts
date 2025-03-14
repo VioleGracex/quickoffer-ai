@@ -1,4 +1,4 @@
-import { useState } from "react";
+/* import { useState } from "react";
 import api from "../api/axios";
 
 const useAuth = () => {
@@ -13,7 +13,7 @@ const useAuth = () => {
     setError(null);
     try {
       // Request to the /token endpoint to get the JWT token
-      const response = await api.post<any>("/token", {
+      const response = await api.post<any>("/signin", {
         username: email,  // FastAPI expects 'username' instead of 'email'
         password,
       }, {
@@ -72,3 +72,4 @@ const useAuth = () => {
 };
 
 export default useAuth;
+ */
