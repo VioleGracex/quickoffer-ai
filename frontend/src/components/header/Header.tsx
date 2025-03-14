@@ -3,7 +3,7 @@ import { ThemeToggleButton } from "../common/ThemeToggleButton";
 import NotificationDropdown from "./NotificationDropdown";
 import UserDropdown from "./UserDropdown";
 import { Link } from "react-router-dom"; // Ensure you import from 'react-router-dom'
-import { useAuth } from "../../contexts/AuthContext";
+import useAuth from "../../routes/useAuth";
 
 interface HeaderProps {
   onClick?: () => void;
@@ -12,7 +12,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
-  const { logout } = useAuth(); // Call logout from useAuth
+  const { signOut } = useAuth(); // Call logout from useAuth
 
   const toggleApplicationMenu = () => {
     setApplicationMenuOpen(!isApplicationMenuOpen);
@@ -90,7 +90,7 @@ const Header: React.FC<HeaderProps> = ({ onClick, onToggle }) => {
           >
             My Profile
           </Link>
-          <button onClick={logout} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
+          <button onClick={signOut} className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300">
             Logout
           </button>
         </div>

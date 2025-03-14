@@ -1,75 +1,46 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
-import api from "../api/axios"; // Ensure this path is correct
+import useAuth from "../routes/useAuth";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  signIn: () => void;
-  signOut: () => void;
+  setAuthenticationStatus: (status: boolean) => void; // Function to set auth status
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth must be used within an AuthProvider");
-  }
-  return context;
-}
-
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const { signOut, userExists, user } = useAuth();
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
     // Check if the user is authenticated (e.g., by checking a token in local storage)
-    const token = localStorage.getItem("token");
-    if (token) {
-      console.log("Token found in localStorage:", token);
-      checkUserExists(token);
+    const token = localStorage.getItem('token');
+    console.log(userExists());
+    if (token && userExists()) {
+      setIsAuthenticated(true);
     } else {
-      console.log("No token found in localStorage.");
+      setIsAuthenticated(false);
     }
-  }, []);
+  }, [user]); // Re-run this effect when `user` changes
 
-  const checkUserExists = async (token: string) => {
-    try {
-      console.log("Checking if user exists with token:", token);
-      const response = await api.get("/users/me", {
-        headers: {
-          "Authorization": `Bearer ${token}`,
-        },
-      });
-      console.error(response.status);
-      if (response.status === 200) {
-        console.log("User exists. Setting isAuthenticated to true.");
-        setIsAuthenticated(true);
-      } else {
-        console.log("User does not exist or invalid token. Signing out.");
-        signOut();
-      }
-    } catch (error) {
-      console.error("Error checking user existence:", error);
-      signOut(); // Force sign out if the user does not exist
+  const setAuthenticationStatus = (status: boolean) => {
+    setIsAuthenticated(status);
+    if (!status) {
+      //signOut();
     }
-  };
-
-
-  const signIn = () => {
-    // Perform login logic and set isAuthenticated to true
-    console.log("Logging in. Setting isAuthenticated to true.");
-    setIsAuthenticated(true);
-  };
-
-  const signOut = () => {
-    // Perform logout logic and set isAuthenticated to false
-    console.log("Logging out. Removing token from localStorage and setting isAuthenticated to false.");
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, signIn, signOut }}>
+    <AuthContext.Provider value={{ isAuthenticated, setAuthenticationStatus }}>
       {children}
     </AuthContext.Provider>
   );
+}
+
+export function useAuthContext() {
+  const context = useContext(AuthContext);
+  if (context === undefined) {
+    throw new Error("useAuthContext must be used within an AuthProvider");
+  }
+  return context;
 }

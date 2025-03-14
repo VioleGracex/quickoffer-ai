@@ -1,4 +1,4 @@
-import { useState, FormEvent } from "react";
+import { useState, FormEvent, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
@@ -21,7 +21,7 @@ export default function SignInForm() {
   const [password, setPassword] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const { signIn, loading, error } = useAuth();
+  const { signIn, error, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -50,11 +50,17 @@ export default function SignInForm() {
 
     try {
       await signIn(email, password);
-      navigate("/main-dashboard");
+      navigate("/main-dashboard"); // Redirect after successful sign-in
     } catch (err) {
       console.error("Error during sign-in:", err);
     }
   };
+
+  useEffect(() => {
+    if (user) {
+      navigate("/main-dashboard");
+    }
+  }, [user, navigate]);
 
   return (
     <div className="flex flex-col flex-1">
@@ -177,7 +183,6 @@ export default function SignInForm() {
                     className="w-full"
                     size="sm"
                     type="submit"
-                    disabled={loading}
                   >
                     Войти
                   </Button>

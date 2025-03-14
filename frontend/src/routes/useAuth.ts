@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import api from '../api/axios'; // Ensure this path is correct
 
 interface User {
@@ -35,14 +35,25 @@ const useAuth = () => {
     }
   };
 
+  const userExists = (): boolean => {
+    return user !== null;
+  };
+
   const signIn = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      const response = await api.post<Token>('/token', { email, password });
+      const formData = new URLSearchParams();
+      formData.append("username", email);  // Use "username" for OAuth2 and set it to the email
+      formData.append("password", password);
+
+      const response = await api.post<Token>('/token', formData, {
+        headers: { "Content-Type": "application/x-www-form-urlencoded" }
+      });
+
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
-      await fetchUserDetails(access_token);
+      await fetchUserDetails(access_token);  // Fetch user details after login
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
     } finally {
@@ -68,15 +79,6 @@ const useAuth = () => {
     setUser(null);
   };
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      fetchUserDetails(token);
-    } else {
-      setLoading(false);
-    }
-  }, []);
-
   return {
     user,
     loading,
@@ -84,6 +86,8 @@ const useAuth = () => {
     signIn,
     signUp,
     signOut,
+    fetchUserDetails,
+    userExists, // Expose the userExists function
   };
 };
 
