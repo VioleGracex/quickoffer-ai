@@ -1,9 +1,10 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import api from "../api/axios"; // Ensure this path is correct
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  login: () => void;
-  logout: () => void;
+  signIn: () => void;
+  signOut: () => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -23,23 +24,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Check if the user is authenticated (e.g., by checking a token in local storage)
     const token = localStorage.getItem("token");
     if (token) {
-      setIsAuthenticated(true);
+      console.log("Token found in localStorage:", token);
+      checkUserExists(token);
+    } else {
+      console.log("No token found in localStorage.");
     }
   }, []);
 
-  const login = () => {
+  const checkUserExists = async (token: string) => {
+    try {
+      console.log("Checking if user exists with token:", token);
+      const response = await api.get("/users/me", {
+        headers: {
+          "Authorization": `Bearer ${token}`,
+        },
+      });
+      console.error(response.status);
+      if (response.status === 200) {
+        console.log("User exists. Setting isAuthenticated to true.");
+        setIsAuthenticated(true);
+      } else {
+        console.log("User does not exist or invalid token. Signing out.");
+        signOut();
+      }
+    } catch (error) {
+      console.error("Error checking user existence:", error);
+      signOut(); // Force sign out if the user does not exist
+    }
+  };
+
+
+  const signIn = () => {
     // Perform login logic and set isAuthenticated to true
+    console.log("Logging in. Setting isAuthenticated to true.");
     setIsAuthenticated(true);
   };
 
-  const logout = () => {
+  const signOut = () => {
     // Perform logout logic and set isAuthenticated to false
+    console.log("Logging out. Removing token from localStorage and setting isAuthenticated to false.");
     localStorage.removeItem("token");
     setIsAuthenticated(false);
   };
 
   return (
-    <AuthContext.Provider value={{ isAuthenticated, login, logout }}>
+    <AuthContext.Provider value={{ isAuthenticated, signIn, signOut }}>
       {children}
     </AuthContext.Provider>
   );

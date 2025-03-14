@@ -1,9 +1,9 @@
-from typing import List
 from fastapi import APIRouter, Depends, HTTPException, status, Request
 from sqlalchemy.orm import Session
 from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from datetime import timedelta
 from jose import JWTError, jwt
+from typing import List
 
 from app import schemas, models, services
 from app.db.session import get_db
@@ -90,3 +90,7 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     if user is None:
         raise credentials_exception
     return user
+
+@router.get("/users/me", response_model=schemas.User)
+def read_users_me(current_user: schemas.User = Depends(get_current_user)):
+    return current_user

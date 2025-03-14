@@ -16,8 +16,7 @@ import { validateEmail, validateSignUpPassword } from "../../utils/validationUti
 
 export default function SignUpForm() {
   const [showPassword, setShowPassword] = useState<boolean>(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState<boolean>(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState<boolean>(false);
   const [isChecked, setIsChecked] = useState<boolean>(false);
   const [fname, setFname] = useState<string>("");
   const [lname, setLname] = useState<string>("");
@@ -28,9 +27,7 @@ export default function SignUpForm() {
   const [lnameError, setLnameError] = useState<string | null>(null);
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
-  const [confirmPasswordError, setConfirmPasswordError] = useState<
-    string | null
-  >(null);
+  const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
   const { signUp, loading, error } = useAuth();
   const navigate = useNavigate();
 
@@ -60,9 +57,7 @@ export default function SignUpForm() {
     }
 
     if (!validateSignUpPassword(password)) {
-      setPasswordError(
-        "Пароль должен содержать минимум 8 символов, включая буквы и цифры"
-      );
+      setPasswordError("Пароль должен содержать минимум 8 символов, включая буквы и цифры");
       valid = false;
     } else {
       setPasswordError(null);
@@ -80,7 +75,7 @@ export default function SignUpForm() {
     }
 
     try {
-      await signUp(email, password, fname, lname);
+      await signUp({ email, password, first_name: fname, last_name: lname });
       navigate("/signin");
     } catch (err) {
       console.error("Error during sign-up:", err);
@@ -111,19 +106,11 @@ export default function SignUpForm() {
           <div>
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 sm:gap-5">
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                <FontAwesomeIcon
-                  icon={faGoogle}
-                  size="lg"
-                  style={{ color: "#DB4437" }}
-                />
+                <FontAwesomeIcon icon={faGoogle} size="lg" style={{ color: "#DB4437" }} />
                 Зарегистрироваться с Google
               </button>
               <button className="inline-flex items-center justify-center gap-3 py-3 text-sm font-normal text-gray-700 transition-colors bg-gray-100 rounded-lg px-7 hover:bg-gray-200 hover:text-gray-800 dark:bg-white/5 dark:text-white/90 dark:hover:bg-white/10">
-                <FontAwesomeIcon
-                  icon={faVk}
-                  size="lg"
-                  style={{ color: "blue" }}
-                />
+                <FontAwesomeIcon icon={faVk} size="lg" style={{ color: "blue" }} />
                 Зарегистрироваться с VK
               </button>
             </div>
@@ -241,9 +228,7 @@ export default function SignUpForm() {
                       className="pr-10" // Ensures text doesn't overlap with the icon
                     />
                     <span
-                      onClick={() =>
-                        setShowConfirmPassword(!showConfirmPassword)
-                      }
+                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                       className="absolute right-4 top-1/2 transform -translate-y-1/2 cursor-pointer"
                     >
                       {showConfirmPassword ? (

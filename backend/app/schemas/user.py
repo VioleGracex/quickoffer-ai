@@ -36,3 +36,8 @@ class UserInDB(UserInDBBase):
 class Token(BaseModel):
     access_token: str
     token_type: str
+
+# User login schema for authentication requests
+class UserLogin(BaseModel):
+    email: EmailStr
+    password: str

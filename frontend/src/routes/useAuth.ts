@@ -1,81 +1,90 @@
-import { useState } from "react";
-import api from "../api/axios";
+import { useState, useEffect } from 'react';
+import api from '../api/axios'; // Ensure this path is correct
+
+interface User {
+  id: number;
+  first_name: string;
+  last_name: string;
+  email: string;
+  is_active: boolean;
+  is_superuser: boolean;
+}
+
+interface Token {
+  access_token: string;
+  token_type: string;
+}
 
 const useAuth = () => {
-  const [loading, setLoading] = useState<boolean>(false);
+  const [user, setUser] = useState<User | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
-  // Sign-In Function
-  const signIn = async (email: string, password: string): Promise<any> => {
+  const fetchUserDetails = async (token: string): Promise<void> => {
+    try {
+      const response = await api.get<User>('/users/me/', {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+      });
+      setUser(response.data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const signIn = async (email: string, password: string): Promise<void> => {
     setLoading(true);
     setError(null);
     try {
-      // Create the form data in URL-encoded format
-      const formData = new URLSearchParams();
-      formData.append("username", email);
-      formData.append("password", password);
+      const response = await api.post<Token>('/token', { email, password });
+      const { access_token } = response.data;
+      localStorage.setItem('token', access_token);
+      await fetchUserDetails(access_token);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-      // Request to the /token endpoint with application/x-www-form-urlencoded
-      const response = await api.post<any>("/token", formData, {
-        headers: {
-          "Content-Type": "application/x-www-form-urlencoded",
-        },
-      });
-
-      // Store the token in localStorage
-      localStorage.setItem("token", response.data.access_token);
-      return response.data; // Return the response (containing the access token)
-    } catch (err) {
-      // Handle error
-      if (err instanceof Error) {
-        setError(err.message);
-      }
+  const signUp = async (userData: { email: string; password: string; first_name: string; last_name: string }): Promise<void> => {
+    setLoading(true);
+    setError(null);
+    try {
+      await api.post<User>('/users/', userData);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message);
       throw err;
     } finally {
       setLoading(false);
     }
   };
 
-  // Sign-Up Function
-  const signUp = async (
-    email: string,
-    password: string,
-    firstName: string,
-    lastName: string
-  ): Promise<any> => {
-    setLoading(true);
-    setError(null);
-    try {
-      // Request to the /users/ endpoint to create a new user
-      const response = await api.post<any>("/users/", {
-        email,
-        password,
-        first_name: firstName,
-        last_name: lastName,
-      }, {
-        headers: {
-          "Content-Type": "application/json",
-        },
-      });
-      return response.data; // Return the user data from the response
-    } catch (err) {
-      // Handle error
-      if (err instanceof Error) {
-        setError(err.message);
-      }
-      throw err;
-    } finally {
+  const signOut = (): void => {
+    localStorage.removeItem('token');
+    setUser(null);
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      fetchUserDetails(token);
+    } else {
       setLoading(false);
     }
-  };
+  }, []);
 
-  // Logout Function
-  const logout = () => {
-    // Remove the token from localStorage
-    localStorage.removeItem("token");
+  return {
+    user,
+    loading,
+    error,
+    signIn,
+    signUp,
+    signOut,
   };
-
-  return { signIn, signUp, logout, loading, error };
 };
 
 export default useAuth;
