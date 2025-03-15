@@ -1,4 +1,5 @@
-import { useState } from "react";
+import React, { useState } from "react";
+import api from "../../api/axios";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -44,25 +45,40 @@ export default function OCRPage() {
     setOutputFormat(format);
   };
 
-  const handleExtractText = () => {
+  const handleExtractText = async (abortController: AbortController): Promise<void> => {
     setError(null);
     if (file) {
-      setTimeout(() => {
-        if (Math.random() > 0.5) {
-          setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
-        } else {
-          const result = `Extracted text from ${file.name} using ${ocrService} in ${outputFormat} format.`;
-          setOcrResult(result);
-          setHistory([...history, { fileName: file.name, ocrService, outputFormat, result }]);
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('ocr_service', ocrService);
+      formData.append('output_format', outputFormat);
+
+      try {
+        const response = await fetch(`${api.defaults.baseURL}/files/upload-ocr/`, {
+          method: 'POST',
+          body: formData,
+          signal: abortController.signal,
+        });
+
+        if (response.ok) {
+          const data = await response.json();
+          setOcrResult(data.text);
+          setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
           setCurrentStep(2);
+        } else {
+          setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
         }
-      }, 1000);
+      } catch (error) {
+        if (error.name !== 'AbortError') {
+          setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
+        }
+      }
     }
   };
 
   const handleRetry = () => {
     setError(null);
-    handleExtractText();
+    handleExtractText(new AbortController());
   };
 
   const handleCancel = () => {
@@ -97,6 +113,7 @@ export default function OCRPage() {
       case 1:
         return (
           <StepTwo
+            file={file}
             handleExtractText={handleExtractText}
             handleCancel={handleCancel}
             error={error}

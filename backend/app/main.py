@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends
 from sqlalchemy.orm import Session
 from sqlalchemy.exc import SQLAlchemyError
 
-from app.api.v1.endpoints import users
+from app.api.v1.endpoints import api_router  # Import api_router
 from app.db.session import get_db, init_db, table_exists
 from app.core.config import settings
 from app import services, schemas
@@ -13,7 +13,8 @@ app = FastAPI()
 # Add CORS middleware
 add_cors_middleware(app)
 
-app.include_router(users.router, prefix="/api/v1", tags=["users"])
+# Include the API router
+app.include_router(api_router, prefix="/api/v1")
 
 @app.on_event("startup")
 def startup_event():

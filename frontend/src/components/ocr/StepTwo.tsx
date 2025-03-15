@@ -1,25 +1,37 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { FiArrowRight, FiArrowLeft, FiXCircle, FiRefreshCw } from "react-icons/fi";
-import { Button, IconButton } from '@mui/material';
+import { Button, IconButton, CircularProgress } from '@mui/material';
 
 interface StepTwoProps {
-  handleExtractText: () => void;
+  file: File | null;
+  handleExtractText: (abortController: AbortController) => Promise<void>;
   handleCancel: () => void;
   error: string | null;
   handleRetry: () => void;
   setCurrentStep: (step: number) => void;
 }
 
-const StepTwo: React.FC<StepTwoProps> = ({ handleExtractText, handleCancel, error, handleRetry, setCurrentStep }) => {
-  const [progress, setProgress] = useState<number>(0);
+const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel, error, handleRetry, setCurrentStep }) => {
+  const [loading, setLoading] = useState<boolean>(false);
+  const [abortController, setAbortController] = useState<AbortController | null>(null);
 
-  // Simulate progress
-  React.useEffect(() => {
-    if (progress < 100) {
-      const timer = setTimeout(() => setProgress(progress + 10), 100);
-      return () => clearTimeout(timer);
+  useEffect(() => {
+    if (file) {
+      const newAbortController = new AbortController();
+      setAbortController(newAbortController);
+      setLoading(true);
+      handleExtractText(newAbortController).finally(() => {
+        setLoading(false);
+      });
     }
-  }, [progress]);
+  }, [file, handleExtractText]);
+
+  const handleCancelClick = () => {
+    if (abortController) {
+      abortController.abort();
+    }
+    handleCancel();
+  };
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 dark:text-white">
@@ -32,23 +44,8 @@ const StepTwo: React.FC<StepTwoProps> = ({ handleExtractText, handleCancel, erro
         </div>
       )}
       <div className="flex justify-center items-center">
-        <div className="w-full bg-gray-200 rounded-full h-6 dark:bg-gray-700">
-          <div className={`text-xs font-medium text-blue-100 text-center p-1 leading-none rounded-full h-6 ${progress === 100 ? 'bg-green-600' : 'bg-blue-600'}`} style={{ width: `${progress}%` }}>
-            {progress}%
-          </div>
-        </div>
-      </div>
-      <div className="flex justify-center space-x-6">
-        {progress < 100 ? (
-          <Button
-            variant="contained"
-            color="error"
-            onClick={handleCancel}
-            startIcon={<FiXCircle />}
-            className="dark:bg-red-700 dark:text-white"
-          >
-            Отменить
-          </Button>
+        {loading ? (
+          <CircularProgress color="primary" />
         ) : (
           <>
             <Button
@@ -64,7 +61,7 @@ const StepTwo: React.FC<StepTwoProps> = ({ handleExtractText, handleCancel, erro
             <Button
               variant="contained"
               color="primary"
-              onClick={handleExtractText}
+              onClick={() => setCurrentStep(2)}
               endIcon={<FiArrowRight />}
               className="dark:bg-blue-700 dark:text-white"
               sx={{ ml: 2 }}
@@ -73,6 +70,17 @@ const StepTwo: React.FC<StepTwoProps> = ({ handleExtractText, handleCancel, erro
             </Button>
           </>
         )}
+      </div>
+      <div className="flex justify-center space-x-6">
+        <Button
+          variant="contained"
+          color="error"
+          onClick={handleCancelClick}
+          startIcon={<FiXCircle />}
+          className="dark:bg-red-700 dark:text-white"
+        >
+          Отменить
+        </Button>
       </div>
     </div>
   );

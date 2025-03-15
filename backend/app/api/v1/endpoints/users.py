@@ -88,13 +88,13 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
     return user
 
 # Get the current user's data (GET /users/me)
-@router.get("/users/me", response_model=schemas.User)
+@router.get("/me", response_model=schemas.User)
 def read_users_me(current_user: schemas.User = Depends(get_current_user)):
     return current_user
 
 
 # User creation endpoint (POST /users/)
-@router.post("/users/", response_model=schemas.User)
+@router.post("/", response_model=schemas.User)
 async def create_user(request: Request, db: Session = Depends(get_db)):
     user_in = await request.json()
     print("Received create_user payload:", user_in)  # Debugging statement
@@ -109,14 +109,14 @@ async def create_user(request: Request, db: Session = Depends(get_db)):
 
 
 # Read all users (GET /users/)
-@router.get("/users/", response_model=List[schemas.User])
+@router.get("/all", response_model=List[schemas.User])
 def read_users(skip: int = 0, limit: int = 10, db: Session = Depends(get_db)):
     users = services.get_users(db, skip=skip, limit=limit)
     return users
 
 
 # Read a specific user (GET /users/{user_id})
-@router.get("/users/{user_id}", response_model=schemas.User)
+@router.get("/{user_id}", response_model=schemas.User)
 def read_user(user_id: int, db: Session = Depends(get_db)):
     user = services.get_user(db, user_id=user_id)
     if user is None:
@@ -125,7 +125,7 @@ def read_user(user_id: int, db: Session = Depends(get_db)):
 
 
 # Update user data (PUT /users/{user_id})
-@router.put("/users/{user_id}", response_model=schemas.User)
+@router.put("/{user_id}", response_model=schemas.User)
 async def update_user(user_id: int, request: Request, db: Session = Depends(get_db)):
     user_in = await request.json()
     print("Received update_user payload:", user_in)  # Debugging statement
@@ -137,7 +137,7 @@ async def update_user(user_id: int, request: Request, db: Session = Depends(get_
 
 
 # Delete user data (DELETE /users/{user_id})
-@router.delete("/users/{user_id}", response_model=schemas.User)
+@router.delete("/{user_id}", response_model=schemas.User)
 def delete_user(user_id: int, db: Session = Depends(get_db)):
     user = services.get_user(db, user_id=user_id)
     if user is None:

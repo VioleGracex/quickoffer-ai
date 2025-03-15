@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState } from "react";
 import { useDropzone } from 'react-dropzone';
 import { FiUploadCloud, FiTrash2 } from "react-icons/fi";
 import { Button, IconButton } from '@mui/material';
@@ -16,6 +16,7 @@ interface StepOneProps {
 
 const ocrServices = ['EasyOCR', 'Google Vision', 'Tesseract OCR'];
 const outputFormats = ['.txt', '.pdf', '.docx'];
+const supportedFileTypes = ['image/jpeg', 'image/png', 'application/pdf'];
 
 const StepOne: React.FC<StepOneProps> = ({
   file,
@@ -27,9 +28,18 @@ const StepOne: React.FC<StepOneProps> = ({
   handleOutputFormatChange,
   setCurrentStep
 }) => {
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: acceptedFiles => {
-      handleFileUpload(acceptedFiles[0]);
+      const uploadedFile = acceptedFiles[0];
+      if (supportedFileTypes.includes(uploadedFile.type)) {
+        handleFileUpload(uploadedFile);
+        setErrorMessage(null);
+      } else {
+        handleDeleteFile();
+        setErrorMessage('Неподдерживаемый формат файла. Пожалуйста, загрузите изображение или PDF.');
+      }
     },
     multiple: false
   });
@@ -56,6 +66,9 @@ const StepOne: React.FC<StepOneProps> = ({
             <FiTrash2 />
           </IconButton>
         </div>
+      )}
+      {errorMessage && (
+        <div className="text-red-600 dark:text-red-400">{errorMessage}</div>
       )}
       <div>
         <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">OCR Сервис</label>
@@ -87,7 +100,7 @@ const StepOne: React.FC<StepOneProps> = ({
           color="primary"
           onClick={() => setCurrentStep(1)}
           startIcon={<FiUploadCloud />}
-          disabled={!file}
+          disabled={!file || !!errorMessage}
         >
           Загрузить файл
         </Button>

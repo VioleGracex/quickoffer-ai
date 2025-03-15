@@ -10,3 +10,5 @@ from .auth import (
     delete_user,
     create_access_token,
 )
+
+from .ocr import read_pdf, read_excel, read_image  # Add OCR functions

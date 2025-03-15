@@ -2,11 +2,16 @@ import easyocr
 import fitz  # PyMuPDF
 import pandas as pd
 from PIL import Image
-
 from fastapi import UploadFile, HTTPException
+import logging
+import numpy as np
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 # Initialize EasyOCR reader
-reader = easyocr.Reader(['en', 'ru'], gpu=False)
+easyocr_reader = easyocr.Reader(['en', 'ru'], gpu=True)
 
 def read_pdf(file: UploadFile):
     try:
@@ -16,6 +21,7 @@ def read_pdf(file: UploadFile):
             text += page.get_text()
         return text
     except Exception as e:
+        logger.error(f"Error reading PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading PDF: {e}")
 
 def read_excel(file: UploadFile):
@@ -24,13 +30,21 @@ def read_excel(file: UploadFile):
         text = df.to_string()
         return text
     except Exception as e:
+        logger.error(f"Error reading Excel: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading Excel: {e}")
 
-def read_image(file: UploadFile):
+def read_image_with_easyocr(file: UploadFile):
     try:
-        image = Image.open(file.file)
-        result = reader.readtext(image)
+        image_bytes = file.file.read()  # Read file as bytes
+        result = easyocr_reader.readtext(image_bytes)
         text = " ".join([text for _, text, _ in result])
         return text
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error reading image: {e}")
+        logger.error(f"Error reading image with EasyOCR: {e}")
+        raise HTTPException(status_code=500, detail=f"Error reading image with EasyOCR: {e}")
+
+def read_image(file: UploadFile, ocr_service: str):
+    if ocr_service == 'EasyOCR':
+        return read_image_with_easyocr(file)
+    else:
+        raise HTTPException(status_code=400, detail=f"OCR service {ocr_service} not supported.")

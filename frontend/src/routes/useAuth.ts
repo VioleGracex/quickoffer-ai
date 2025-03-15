@@ -63,14 +63,13 @@ const useAuth = () => {
       formData.append("username", email);  // Use "username" for OAuth2 and set it to the email
       formData.append("password", password);
 
-      const response = await api.post<Token>('/token', formData, {
+      const response = await api.post<Token>('users/token', formData, {
         headers: { "Content-Type": "application/x-www-form-urlencoded" }
       });
 
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
       console.log("Token set:", access_token);
-      await fetchUserDetails(access_token);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
       setIsAuthenticated(false);
