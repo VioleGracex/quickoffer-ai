@@ -26,15 +26,14 @@ const dropdownItems = [
 
 export default function UserDropdown() {
   const [isOpen, setIsOpen] = useState(false);
-  const { user, fetchUserDetails } = useAuth();
-  const {signOut} = useAuth();
+  const { user, fetchUserDetails, signOut } = useAuth();
 
   useEffect(() => {
     const token = localStorage.getItem('token');
-    if (token) {
+    if (token && user === null) {
       fetchUserDetails(token);
     }
-  }, []);
+  }, [fetchUserDetails, user]);
 
   function toggleDropdown() {
     setIsOpen(!isOpen);
@@ -50,8 +49,14 @@ export default function UserDropdown() {
         onClick={toggleDropdown}
         className="flex items-center text-gray-700 dropdown-toggle dark:text-gray-400"
       >
-        <span className="mr-3 overflow-hidden rounded-full h-11 w-11">
-          <img src="/images/user/owner.jpg" alt="Пользователь" />
+        <span className="mr-3 overflow-hidden rounded-full h-11 w-11 flex items-center justify-center bg-gray-200 dark:bg-gray-800">
+          {user?.avatar ? (
+            <img src={user.avatar} alt="Пользователь" />
+          ) : (
+            <span className="text-gray-800 dark:text-white text-xl font-semibold">
+              {user?.first_name?.charAt(0)}
+            </span>
+          )}
         </span>
         <span className="block mr-1 font-medium text-theme-sm">{user?.first_name}</span>
         <FontAwesomeIcon

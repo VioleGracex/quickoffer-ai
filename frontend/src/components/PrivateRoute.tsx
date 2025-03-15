@@ -1,33 +1,39 @@
-import React, { useEffect, useState } from 'react';
-import { Route, Navigate, Outlet } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
+import {jwtDecode} from 'jwt-decode';
 import useAuth from '../routes/useAuth';
 
-const PrivateRoute = () => {
-  const { fetchUserDetails } = useAuth();
+const PrivateRoute: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+  const { signOut } = useAuth();
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          await fetchUserDetails(token);
-          setIsAuthenticated(true);
-        } catch (error) {
-          setIsAuthenticated(false);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
+    const token = localStorage.getItem('token');
+    if (token) {
+      const tokenValidity = isTokenValid(token);
+      setIsAuthenticated(tokenValidity);
+    } else {
+      setIsAuthenticated(false);
+      signOut();
+    }
   }, []);
 
   if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Or a loading spinner
+    // Render a loading state while authentication is being checked
+    return <div>Loading...</div>;
   }
 
   return isAuthenticated ? <Outlet /> : <Navigate to="/signin" />;
+};
+
+const isTokenValid = (token: string): boolean => {
+  try {
+    const decodedToken: { exp: number } = jwtDecode(token);
+    const currentTime = Math.floor(Date.now() / 1000);
+    return decodedToken.exp > currentTime;
+  } catch (error) {
+    return false;
+  }
 };
 
 export default PrivateRoute;

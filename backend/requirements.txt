@@ -10,3 +10,8 @@ alembic
 python-dotenv
 pydantic-settings
 psycopg2
+easyocr
+opencv-python-headless
+pillow
+filetype
+pandas

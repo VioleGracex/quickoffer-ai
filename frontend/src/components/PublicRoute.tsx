@@ -1,32 +1,15 @@
-import React, { useEffect, useState } from 'react';
-import { Route, Navigate, Outlet } from 'react-router-dom';
-import useAuth from '../routes/useAuth';
+import React, { useState, useEffect } from 'react';
+import { Navigate, Outlet } from 'react-router-dom';
 
-const PublicRoute = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
+const PublicRoute: React.FC = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
   useEffect(() => {
-    const checkAuth = async () => {
-      const token = localStorage.getItem('token');
-      if (token) {
-        try {
-          //await fetchUserDetails(token);
-          setIsAuthenticated(true);
-        } catch (error) {
-          setIsAuthenticated(false);
-        }
-      } else {
-        setIsAuthenticated(false);
-      }
-    };
-    checkAuth();
-  }, []);
+    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
+    setIsAuthenticated(authStatus);
+  }, []); // Empty dependency array ensures this runs only once on mount
 
-  if (isAuthenticated === null) {
-    return <div>Loading...</div>; // Or a loading spinner
-  }
-
-  return isAuthenticated ? <Navigate to="/main-dashboard" /> : <Outlet />;
+  return !isAuthenticated ? <Outlet /> : <Navigate to="/main-dashboard" />;
 };
 
 export default PublicRoute;

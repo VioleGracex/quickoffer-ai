@@ -1,3 +1,4 @@
+import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import SignIn from "./pages/AuthPages/SignIn";
 import SignUp from "./pages/AuthPages/SignUp";
@@ -22,6 +23,7 @@ import Home from "./pages/LandingHome/Home";
 import Inbox from "./pages/Inbox/Inbox";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
+import OCRPage from "./pages/OCR/OCRPage"; // Import the OCRPage component
 
 export default function App() {
   return (
@@ -45,6 +47,7 @@ export default function App() {
             <Route path="/profile" element={<UserProfiles />} />
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
+            <Route path="/ocr" element={<OCRPage />} /> {/* Add OCRPage route */}
 
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />

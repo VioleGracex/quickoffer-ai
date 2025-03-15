@@ -43,10 +43,13 @@ const navItems: NavItem[] = [
     subItems: [{ name: "Входящие", path: "/inbox", pro: false }],
   },
   {
-    name: "КП",
+    name: "Обработка документов",
     icon: <PageIcon />,
-    subItems: [{ name: "Форма создания КП", path: "/kp-manual-generation", pro: false },],
-  },
+    subItems: [
+      { name: "OCR", path: "/ocr", pro: false },
+      { name: "Форма создания КП", path: "/kp-manual-generation", pro: false },
+    ],
+  },  
   {
     name: "Формы",
     icon: <ListIcon />,

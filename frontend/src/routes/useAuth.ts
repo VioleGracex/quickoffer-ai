@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { jwtDecode } from 'jwt-decode';
 import api from '../api/axios'; // Ensure this path is correct
 
 interface User {
@@ -6,6 +7,8 @@ interface User {
   first_name: string;
   last_name: string;
   email: string;
+  phone: string;
+  bio: string;
   is_active: boolean;
   is_superuser: boolean;
 }
@@ -15,10 +18,18 @@ interface Token {
   token_type: string;
 }
 
+interface DecodedToken {
+  exp: number;
+}
+
 const useAuth = () => {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => {
+    const storedAuth = localStorage.getItem('isAuthenticated');
+    return storedAuth === 'true';
+  });
 
   const fetchUserDetails = async (token: string): Promise<void> => {
     setLoading(true);
@@ -29,8 +40,12 @@ const useAuth = () => {
         },
       });
       setUser(response.data);
+      setIsAuthenticated(true);
+      localStorage.setItem('isAuthenticated', 'true');
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
+      setIsAuthenticated(false);
+      localStorage.removeItem('isAuthenticated');
     } finally {
       setLoading(false);
     }
@@ -55,8 +70,11 @@ const useAuth = () => {
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
       console.log("Token set:", access_token);
+      await fetchUserDetails(access_token);
     } catch (err: any) {
       setError(err.response?.data?.detail || err.message);
+      setIsAuthenticated(false);
+      localStorage.removeItem('isAuthenticated');
     } finally {
       setLoading(false);
     }
@@ -78,19 +96,63 @@ const useAuth = () => {
 
   const signOut = (): void => {
     localStorage.removeItem('token');
+    localStorage.removeItem('isAuthenticated');
     setUser(null);
+    setIsAuthenticated(false);
     console.log("User signed out, token removed");
   };
+
+  const updateUser = async (id: number | undefined, userData: Partial<User>): Promise<void> => {
+    if (!id) throw new Error("User ID is required");
+    setLoading(true);
+    setError(null);
+    try {
+      const response = await api.put<User>(`/users/${id}`, userData);
+      setUser(response.data);
+      console.log("User updated:", response.data);
+    } catch (err: any) {
+      setError(err.response?.data?.detail || err.message);
+      throw err;
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const isTokenExpired = (token: string): boolean => {
+    try {
+      const decoded: DecodedToken = jwtDecode(token);
+      return decoded.exp < Date.now() / 1000;
+    } catch (err) {
+      return true;
+    }
+  };
+
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (token) {
+      if (isTokenExpired(token)) {
+        localStorage.removeItem('token');
+        localStorage.removeItem('isAuthenticated');
+        setLoading(false);
+      } else {
+        fetchUserDetails(token);
+      }
+    } else {
+      setLoading(false);
+    }
+  }, []); // Only run once when the component is mounted
 
   return {
     user,
     loading,
     error,
+    isAuthenticated,
     signIn,
     signUp,
     signOut,
+    updateUser,
     fetchUserDetails,
-    userExists, // Expose the userExists function
+    userExists,
   };
 };
 
