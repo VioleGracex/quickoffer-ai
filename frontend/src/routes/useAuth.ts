@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import api from '../api/axios'; // Ensure this path is correct

@@ -1,5 +1,7 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
-import api from "../../api/axios";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useState, useEffect, useCallback, useRef } from "react";
+import { uploadFile, cancelOcr } from "../../routes/OCR_api.tsx";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -52,44 +54,24 @@ export default function OCRPage() {
       setError(null);
       setLoading(true);
       if (file && requestIdRef.current) {
-        const formData = new FormData();
-        formData.append("file", file);
-        formData.append("ocr_service", ocrService || "EasyOCR");
-        formData.append("request_id", requestIdRef.current);
-
         try {
-          const response = await fetch(`${api.defaults.baseURL}/files/upload-ocr/`, {
-            method: "POST",
-            body: formData,
-            signal: abortController.signal,
-          });
+          const data = await uploadFile(file, ocrService, requestIdRef.current);
 
-          if (response.ok) {
-            const data = await response.json();
-
-            if (data.status === "cancelled") {
-              handleCancelCleanup();
-            } else if (data.status === "success" && data.request_id === requestIdRef.current) {
-              setOcrResult(data.text || "Результат OCR пуст.");
-              setHistory((prevHistory) => [
-                ...prevHistory,
-                {
-                  fileName: file.name,
-                  ocrService,
-                  result: `Extracted text from ${file.name}`,
-                },
-              ]);
-              setCurrentStep(2);
-            } else {
-              setError("Request ID mismatch. Please try again.");
-            }
+          if (data.status === "cancelled") {
+            handleCancelCleanup();
+          } else if (data.status === "success" && data.request_id === requestIdRef.current) {
+            setOcrResult(data.text || "Результат OCR пуст.");
+            setHistory((prevHistory) => [
+              ...prevHistory,
+              {
+                fileName: file.name,
+                ocrService,
+                result: `Extracted text from ${file.name}`,
+              },
+            ]);
+            setCurrentStep(2);
           } else {
-            const data = await response.json();
-            if (data.status === "busy") {
-              setError("Сервер занят. Пожалуйста, попробуйте позже.");
-            } else {
-              setError(`Произошла ошибка: ${data.message}`);
-            }
+            setError("Request ID mismatch. Please try again.");
           }
         } catch (error: any) {
           if (error.name === "AbortError") {
@@ -141,17 +123,12 @@ export default function OCRPage() {
     if (requestIdRef.current) {
       // Call the backend API to cancel the OCR task
       console.log("Canceling OCR task with request ID:", requestIdRef.current);
-      const formData = new FormData();
-      formData.append("request_id", requestIdRef.current);
 
       try {
-        const response = await fetch(`${api.defaults.baseURL}/files/cancel-ocr/`, {
-          method: "POST",
-          body: formData,
-        });
+        const data = await cancelOcr(requestIdRef.current);
         console.log("try cancel");
 
-        if (response.ok) {
+        if (data.status === "success") {
           handleCancelCleanup();
         } else {
           setError("Ошибка при отмене запроса. Попробуйте еще раз.");

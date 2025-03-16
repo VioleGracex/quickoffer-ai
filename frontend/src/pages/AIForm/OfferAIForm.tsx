@@ -7,7 +7,7 @@ import { Button, IconButton } from "@mui/material";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-import { useTheme } from "../../context/ThemeContext";
+
 
 interface ClientInfo {
   companyName: string;
@@ -39,7 +39,7 @@ const OfferAIForm: React.FC = () => {
   const [productDataFile, setProductDataFile] = useState<File | null>(null);
   const [generatedText, setGeneratedText] = useState<string>('');
   const [pdfLink, setPdfLink] = useState<string>('');
-  const { theme } = useTheme(); // Get theme from custom context
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
