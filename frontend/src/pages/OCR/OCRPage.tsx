@@ -13,7 +13,6 @@ import { v4 as uuidv4 } from 'uuid';
 interface RequestHistory {
   fileName: string;
   ocrService: string;
-  outputFormat: string;
   result: string;
 }
 
@@ -22,16 +21,15 @@ const steps = ['Загрузите файл и выберите параметр
 export default function OCRPage() {
   const [file, setFile] = useState<File | null>(null);
   const [ocrService, setOcrService] = useState<string>('EasyOCR');
-  const [outputFormat, setOutputFormat] = useState<string>('.txt');
   const [ocrResult, setOcrResult] = useState<string>('');
+  const [pdfData, setPdfData] = useState<string>('');
+  const [docxData, setDocxData] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [history, setHistory] = useState<RequestHistory[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [requestId, setRequestId] = useState<string | null>(null);
 
   const { theme } = useTheme(); // Get theme from custom context
-
-  const previousFileRef = useRef<File | null>(null);
 
   const handleFileUpload = (uploadedFile: File) => {
     setFile(uploadedFile);
@@ -45,17 +43,12 @@ export default function OCRPage() {
     setOcrService(service);
   };
 
-  const handleOutputFormatChange = (format: string) => {
-    setOutputFormat(format);
-  };
-
   const handleExtractText = useCallback(async (abortController: AbortController): Promise<void> => {
     setError(null);
     if (file && requestId) {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('ocr_service', ocrService || 'EasyOCR'); // Default to EasyOCR
-      formData.append('output_format', outputFormat || '.txt'); // Default to .txt
       formData.append('request_id', requestId);
 
       try {
@@ -71,9 +64,11 @@ export default function OCRPage() {
             setError('OCR request was cancelled.');
           } else if (data.status === 'success' && data.request_id === requestId) {
             setOcrResult(data.text || 'Результат OCR пуст.');
+            setPdfData(data.pdf);
+            setDocxData(data.docx);
             setHistory([
               ...history,
-              { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }
+              { fileName: file.name, ocrService, result: `Extracted text from ${file.name}` }
             ]);
             setCurrentStep(2); // Move to StepThree
           } else {
@@ -96,7 +91,7 @@ export default function OCRPage() {
         }
       }
     }
-  }, [file, ocrService, outputFormat, requestId, history]);
+  }, [file, ocrService, requestId, history]);
 
   const startUpload = () => {
     setRequestId(uuidv4());
@@ -137,7 +132,6 @@ export default function OCRPage() {
           setOcrResult(''); // Clear the result
           setFile(null); // Clear the file
           setOcrService('EasyOCR'); // Reset the OCR service to default
-          setOutputFormat('.txt'); // Reset the output format to default
         } else {
           setError('Ошибка при отмене запроса. Попробуйте еще раз.');
         }
@@ -156,6 +150,24 @@ export default function OCRPage() {
     element.click();
   };
 
+  const handleDownloadPdf = () => {
+    const element = document.createElement("a");
+    const fileBlob = new Blob([pdfData], { type: 'application/pdf' });
+    element.href = URL.createObjectURL(fileBlob);
+    element.download = "ocr_result.pdf";
+    document.body.appendChild(element);
+    element.click();
+  };
+
+  const handleDownloadDocx = () => {
+    const element = document.createElement("a");
+    const fileBlob = new Blob([docxData], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+    element.href = URL.createObjectURL(fileBlob);
+    element.download = "ocr_result.docx";
+    document.body.appendChild(element);
+    element.click();
+  };
+
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
@@ -166,8 +178,6 @@ export default function OCRPage() {
             handleDeleteFile={handleDeleteFile}
             ocrService={ocrService}
             handleOcrServiceChange={handleOcrServiceChange}
-            outputFormat={outputFormat}
-            handleOutputFormatChange={handleOutputFormatChange}
             setCurrentStep={startUpload}
           />
         );
@@ -185,8 +195,9 @@ export default function OCRPage() {
           <StepThree
             ocrResult={ocrResult}
             handleDownloadText={handleDownloadText}
+            handleDownloadPdf={handleDownloadPdf}
+            handleDownloadDocx={handleDownloadDocx}
             setCurrentStep={setCurrentStep}
-            outputFormat={outputFormat}
           />
         );
       default:
@@ -229,7 +240,6 @@ export default function OCRPage() {
             <li key={index} className="mb-2">
               <p><strong>Файл:</strong> {request.fileName}</p>
               <p><strong>OCR Сервис:</strong> {request.ocrService}</p>
-              <p><strong>Формат:</strong> {request.outputFormat}</p>
               <p><strong>Результат:</strong> {request.result}</p>
             </li>
           ))}

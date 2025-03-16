@@ -23,10 +23,9 @@ QUEUE_LIMIT = 5  # Set a limit for the number of concurrent OCR requests
 async def upload_ocr_file(
     file: UploadFile = File(...),
     ocr_service: str = Form(...),
-    output_format: str = Form(...),
     request_id: str = Form(...)
 ):
-    print(f"Received file: {file.filename}, OCR service: {ocr_service}, Output format: {output_format}, Request ID: {request_id}")
+    print(f"Received file: {file.filename}, OCR service: {ocr_service}, Request ID: {request_id}")
 
     # Check if the queue is full
     if len(ocr_queue) >= QUEUE_LIMIT:
@@ -53,31 +52,31 @@ async def upload_ocr_file(
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type for OCR")
 
-        result = {"status": "success", "text": text, "request_id": request_id}
+        # Generate PDF
+        pdf_bytes = io.BytesIO()
+        doc = fitz.open()
+        page = doc.new_page()
+        page.insert_text((100, 100), text)
+        doc.save(pdf_bytes)
+        doc.close()
+        pdf_bytes.seek(0)
 
-        if output_format == '.txt':
-            print("Returning plain text response")
-            return JSONResponse(content=result)
-        elif output_format == '.pdf':
-            print("Returning PDF response")
-            pdf_bytes = io.BytesIO()
-            doc = fitz.open()
-            page = doc.new_page()
-            page.insert_text((100, 100), text)
-            doc.save(pdf_bytes)
-            doc.close()
-            pdf_bytes.seek(0)
-            return JSONResponse(content={"status": "success", "message": "PDF created", "request_id": request_id})
-        elif output_format == '.docx':
-            print("Returning DOCX response")
-            doc = Document()
-            doc.add_paragraph(text)
-            file_stream = io.BytesIO()
-            doc.save(file_stream)
-            file_stream.seek(0)
-            return JSONResponse(content={"status": "success", "message": "DOCX created", "request_id": request_id})
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported output format")
+        # Generate DOCX
+        doc = Document()
+        doc.add_paragraph(text)
+        docx_bytes = io.BytesIO()
+        doc.save(docx_bytes)
+        docx_bytes.seek(0)
+
+        result = {
+            "status": "success",
+            "text": text,
+            "pdf": pdf_bytes.getvalue().decode('latin1'),  # Encode as latin1 for JSON compatibility
+            "docx": docx_bytes.getvalue().decode('latin1'),  # Encode as latin1 for JSON compatibility
+            "request_id": request_id
+        }
+
+        return JSONResponse(content=result)
 
     except Exception as e:
         print(f"Error processing file: {e}")
@@ -90,7 +89,7 @@ async def upload_ocr_file(
 
 @router.post("/cancel-ocr/")
 async def cancel_ocr_request(request_id: str = Form(...)):
-    print(f"Cancesling OCR request with ID: {request_id}")
+    print(f"Canceling OCR request with ID: {request_id}")
     if is_task_cancelled(request_id):  # Check if the task is already cancelled
         return JSONResponse(content={"status": "error", "message": "OCR request not found or already cancelled", "request_id": request_id})
     

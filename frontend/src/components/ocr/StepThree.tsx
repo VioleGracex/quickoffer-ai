@@ -1,26 +1,45 @@
 import React from "react";
 import { FiDownload, FiArrowLeft, FiFileText } from "react-icons/fi";
 import { FaFilePdf, FaFileWord } from "react-icons/fa";
-import { Button, IconButton } from '@mui/material';
+import { Button, IconButton } from "@mui/material";
 
 interface StepThreeProps {
   ocrResult: string;
   handleDownloadText: () => void;
+  handleDownloadPdf: () => void;
+  handleDownloadDocx: () => void;
   setCurrentStep: (step: number) => void;
-  outputFormat: string;
 }
 
-const StepThree: React.FC<StepThreeProps> = ({ ocrResult, handleDownloadText, setCurrentStep, outputFormat }) => {
+const fileTypes = [
+  {
+    icon: <FiFileText className="text-3xl text-gray-500 mx-auto mb-2" />,
+    label: "Text",
+    onClick: "handleDownloadText",
+  },
+  {
+    icon: <FaFilePdf className="text-3xl text-gray-500 mx-auto mb-2" />,
+    label: "PDF",
+    onClick: "handleDownloadPdf",
+  },
+  {
+    icon: <FaFileWord className="text-3xl text-gray-500 mx-auto mb-2" />,
+    label: "Word",
+    onClick: "handleDownloadDocx",
+  },
+];
 
-  const renderIcon = () => {
-    switch (outputFormat) {
-      case '.pdf':
-        return <FaFilePdf className="text-6xl text-gray-500 mx-auto mb-2" />;
-      case '.docx':
-        return <FaFileWord className="text-6xl text-gray-500 mx-auto mb-2" />;
-      default:
-        return <FiFileText className="text-6xl text-gray-500 mx-auto mb-2" />;
-    }
+const StepThree: React.FC<StepThreeProps> = ({
+  ocrResult,
+  handleDownloadText,
+  handleDownloadPdf,
+  handleDownloadDocx,
+  setCurrentStep,
+}) => {
+  const downloadHandlers = {
+    handleDownloadText,
+    handleDownloadPdf,
+    handleDownloadDocx,
   };
 
   return (
@@ -33,40 +52,37 @@ const StepThree: React.FC<StepThreeProps> = ({ ocrResult, handleDownloadText, se
           className="w-full p-2 border rounded dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300"
         />
       </div>
-      <div className="flex flex-row text-center bg-black max-w-[250px] mx-auto items-center justify-between p-4 rounded shadow dark:bg-gray-800">
-        <div className="flex flex-col items-center justify-between w-full">
-          {renderIcon()}
-          <p className="mt-2 text-center text-gray-300">
-            OCR Result {outputFormat}
-          </p>
-        </div>
-        <div>
-          <IconButton color="primary" onClick={handleDownloadText}>
-            <FiDownload style={{ fontSize: "2rem" }} />
-          </IconButton>
-        </div>
+      <div className="flex flex-row justify-around">
+        {fileTypes.map((fileType) => (
+          <div
+            key={fileType.label}
+            className="flex flex-row items-center bg-black max-w-[200px] p-4 rounded shadow dark:bg-gray-800"
+          >
+            <div>
+              {" "}
+              {fileType.icon}
+              <p className="text-center text-gray-300">{fileType.label}</p>
+            </div>
+            <div>
+              <IconButton
+                color="primary"
+                onClick={downloadHandlers[fileType.onClick]}
+              >
+                <FiDownload style={{ fontSize: "2rem" }} />
+              </IconButton>
+            </div>
+          </div>
+        ))}
       </div>
       <div className="flex flex-col items-center space-y-6">
-        <div>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={handleDownloadText}
-            startIcon={<FiDownload />}
-          >
-            Скачать текст
-          </Button>
-        </div>
-        <div>
-          <Button
-            variant="contained"
-            color="primary"
-            onClick={() => setCurrentStep(0)}
-            startIcon={<FiArrowLeft />}
-          >
-            Начать заново
-          </Button>
-        </div>
+        <Button
+          variant="contained"
+          color="primary"
+          onClick={() => setCurrentStep(0)}
+          startIcon={<FiArrowLeft />}
+        >
+          Начать заново
+        </Button>
       </div>
     </div>
   );
