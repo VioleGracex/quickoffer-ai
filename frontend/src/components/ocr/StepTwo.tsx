@@ -4,16 +4,14 @@ import { Button, IconButton, CircularProgress } from '@mui/material';
 
 interface StepTwoProps {
   file: File | null;
-  ocrService: string;
-  outputFormat: string;
-  handleExtractText: (ocrService: string, outputFormat: string, abortController: AbortController) => Promise<void>;
+  handleExtractText: (abortController: AbortController) => Promise<void>;
   handleCancel: () => void;
   error: string | null;
   handleRetry: () => void;
   setCurrentStep: (step: number) => void;
 }
 
-const StepTwo: React.FC<StepTwoProps> = ({ file, ocrService, outputFormat, handleExtractText, handleCancel, error, handleRetry, setCurrentStep }) => {
+const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel, error, handleRetry, setCurrentStep }) => {
   const [loading, setLoading] = useState<boolean>(false);
   const [abortController, setAbortController] = useState<AbortController | null>(null);
 
@@ -22,11 +20,11 @@ const StepTwo: React.FC<StepTwoProps> = ({ file, ocrService, outputFormat, handl
       const newAbortController = new AbortController();
       setAbortController(newAbortController);
       setLoading(true);
-      handleExtractText(ocrService, outputFormat, newAbortController).finally(() => {
+      handleExtractText(newAbortController).finally(() => {
         setLoading(false);
       });
     }
-  }, [file, handleExtractText, ocrService, outputFormat]);
+  }, [file, handleExtractText]);
 
   const handleCancelClick = () => {
     if (abortController) {
@@ -67,7 +65,6 @@ const StepTwo: React.FC<StepTwoProps> = ({ file, ocrService, outputFormat, handl
               endIcon={<FiArrowRight />}
               className="dark:bg-blue-700 dark:text-white"
               sx={{ ml: 2 }}
-              disabled={!file}
             >
               Извлечь текст
             </Button>

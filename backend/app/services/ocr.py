@@ -33,18 +33,18 @@ def read_excel(file: UploadFile):
         logger.error(f"Error reading Excel: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading Excel: {e}")
 
-def read_image_with_easyocr(file_contents: bytes):
+def read_image_with_easyocr(file: UploadFile):
     try:
-        result = easyocr_reader.readtext(file_contents)
-        text_blocks = sorted(result, key=lambda x: x[0][0][1])  # Sort by the y-coordinate of the bounding box
-        text = "\n".join([text for _, text, _ in text_blocks])
+        image_bytes = file.file.read()  # Read file as bytes
+        result = easyocr_reader.readtext(image_bytes)
+        text = " ".join([text for _, text, _ in result])
         return text
     except Exception as e:
         logger.error(f"Error reading image with EasyOCR: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading image with EasyOCR: {e}")
 
-def read_image(file_contents: bytes, ocr_service: str):
+def read_image(file: UploadFile, ocr_service: str):
     if ocr_service == 'EasyOCR':
-        return read_image_with_easyocr(file_contents)
+        return read_image_with_easyocr(file)
     else:
         raise HTTPException(status_code=400, detail=f"OCR service {ocr_service} not supported.")

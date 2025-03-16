@@ -1,4 +1,4 @@
-import { useState } from "react";
+import React, { useState } from "react";
 import api from "../../api/axios";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -45,7 +45,7 @@ export default function OCRPage() {
     setOutputFormat(format);
   };
 
-  const handleExtractText = async (ocrService: string, outputFormat: string, abortController: AbortController): Promise<void> => {
+  const handleExtractText = async (abortController: AbortController): Promise<void> => {
     setError(null);
     if (file) {
       const formData = new FormData();
@@ -62,13 +62,9 @@ export default function OCRPage() {
 
         if (response.ok) {
           const data = await response.json();
-          if (data.text) {
-            setOcrResult(data.text);
-            setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
-            setCurrentStep(2);
-          } else {
-            setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
-          }
+          setOcrResult(data.text);
+          setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
+          setCurrentStep(2);
         } else {
           setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
         }
@@ -82,7 +78,7 @@ export default function OCRPage() {
 
   const handleRetry = () => {
     setError(null);
-    handleExtractText(ocrService, outputFormat, new AbortController());
+    handleExtractText(new AbortController());
   };
 
   const handleCancel = () => {
@@ -90,32 +86,13 @@ export default function OCRPage() {
     setError(null);
   };
 
-  const handleDownloadText = async () => {
-    const formData = new FormData();
-    formData.append('text', ocrResult);
-    formData.append('output_format', outputFormat);
-
-    try {
-      const response = await fetch(`${api.defaults.baseURL}/files/convert/`, {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (response.ok) {
-        const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
-        const a = document.createElement("a");
-        a.href = url;
-        a.download = `ocr_result${outputFormat}`;
-        document.body.appendChild(a);
-        a.click();
-        a.remove();
-      } else {
-        setError('Произошла ошибка при конвертации текста. Попробуйте еще раз.');
-      }
-    } catch (error) {
-      setError('Произошла ошибка при конвертации текста. Попробуйте еще раз.');
-    }
+  const handleDownloadText = () => {
+    const element = document.createElement("a");
+    const fileBlob = new Blob([ocrResult], { type: 'text/plain' });
+    element.href = URL.createObjectURL(fileBlob);
+    element.download = "ocr_result.txt";
+    document.body.appendChild(element);
+    element.click();
   };
 
   const renderStepContent = () => {
@@ -137,8 +114,6 @@ export default function OCRPage() {
         return (
           <StepTwo
             file={file}
-            ocrService={ocrService}
-            outputFormat={outputFormat}
             handleExtractText={handleExtractText}
             handleCancel={handleCancel}
             error={error}
@@ -172,12 +147,12 @@ export default function OCRPage() {
           <Stepper activeStep={currentStep} alternativeLabel>
             {steps.map((label, index) => (
               <Step key={label} onClick={() => setCurrentStep(index)}>
-                <StepLabel
-                  sx={{
-                    '& .MuiStepLabel-label': {
+                <StepLabel 
+                  sx={{ 
+                    '& .MuiStepLabel-label': { 
                       color: theme === 'dark' ? '#fff' : 'inherit', // Using custom theme context
-                      '&.Mui-active': { color: 'primary.main' },
-                      '&.Mui-completed': { color: 'primary.main' }
+                      '&.Mui-active': { color: 'primary.main' }, 
+                      '&.Mui-completed': { color: 'primary.main' } 
                     }
                   }}
                 >
