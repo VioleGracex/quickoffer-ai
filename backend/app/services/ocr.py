@@ -18,7 +18,7 @@ def read_pdf(file: UploadFile):
         doc = fitz.open(stream=file.file.read(), filetype="pdf")
         text = ""
         for page in doc:
-            text += page.get_text()
+            text += page.get_text("text")
         return text
     except Exception as e:
         logger.error(f"Error reading PDF: {e}")
@@ -37,7 +37,8 @@ def read_image_with_easyocr(file: UploadFile):
     try:
         image_bytes = file.file.read()  # Read file as bytes
         result = easyocr_reader.readtext(image_bytes)
-        text = " ".join([text for _, text, _ in result])
+        # Join the text segments with newline characters
+        text = "\n".join([text for _, text, _ in result])
         return text
     except Exception as e:
         logger.error(f"Error reading image with EasyOCR: {e}")

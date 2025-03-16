@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import api from "../../api/axios";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -8,6 +8,7 @@ import StepOne from "../../components/ocr/StepOne";
 import StepTwo from "../../components/ocr/StepTwo";
 import StepThree from "../../components/ocr/StepThree";
 import { useTheme } from "../../context/ThemeContext"; // Use your custom ThemeContext
+import { v4 as uuidv4 } from 'uuid';
 
 interface RequestHistory {
   fileName: string;
@@ -26,8 +27,11 @@ export default function OCRPage() {
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [history, setHistory] = useState<RequestHistory[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
 
   const { theme } = useTheme(); // Get theme from custom context
+
+  const previousFileRef = useRef<File | null>(null);
 
   const handleFileUpload = (uploadedFile: File) => {
     setFile(uploadedFile);
@@ -45,13 +49,14 @@ export default function OCRPage() {
     setOutputFormat(format);
   };
 
-  const handleExtractText = async (abortController: AbortController): Promise<void> => {
+  const handleExtractText = useCallback(async (abortController: AbortController): Promise<void> => {
     setError(null);
-    if (file) {
+    if (file && requestId) {
       const formData = new FormData();
       formData.append('file', file);
       formData.append('ocr_service', ocrService);
       formData.append('output_format', outputFormat);
+      formData.append('request_id', requestId);
 
       try {
         const response = await fetch(`${api.defaults.baseURL}/files/upload-ocr/`, {
@@ -62,9 +67,13 @@ export default function OCRPage() {
 
         if (response.ok) {
           const data = await response.json();
-          setOcrResult(data.text);
-          setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
-          setCurrentStep(2);
+          if (data.status === 'cancelled') {
+            setError('OCR request was cancelled.');
+          } else if (data.request_id === requestId) {
+            setOcrResult(data.text);
+            setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
+            setCurrentStep(2);
+          }
         } else {
           setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
         }
@@ -74,16 +83,46 @@ export default function OCRPage() {
         }
       }
     }
-  };
+  }, [file, ocrService, outputFormat, requestId, history]);
+
+  const startUpload = () => {
+    setRequestId(uuidv4());
+    setCurrentStep(1);
+  }
+
+  useEffect(() => {
+    if (currentStep === 1 && file && requestId) {
+      const abortController = new AbortController();
+      handleExtractText(abortController);
+    }
+  }, [file, requestId, currentStep, handleExtractText]);
 
   const handleRetry = () => {
     setError(null);
-    handleExtractText(new AbortController());
+    const abortController = new AbortController();
+    handleExtractText(abortController);
   };
 
-  const handleCancel = () => {
-    setCurrentStep(0);
-    setError(null);
+  const handleCancel = async () => {
+    if (requestId) {
+      const formData = new FormData();
+      formData.append('request_id', requestId);
+      try {
+        const response = await fetch(`${api.defaults.baseURL}/files/cancel-ocr/`, {
+          method: 'POST',
+          body: formData,
+        });
+        if (response.ok) {
+          setRequestId(null);
+          setCurrentStep(0);
+          setError(null);
+        } else {
+          setError('Ошибка при отмене запроса. Попробуйте еще раз.');
+        }
+      } catch (error) {
+        setError('Ошибка при отмене запроса. Попробуйте еще раз.');
+      }
+    }
   };
 
   const handleDownloadText = () => {
@@ -107,7 +146,7 @@ export default function OCRPage() {
             handleOcrServiceChange={handleOcrServiceChange}
             outputFormat={outputFormat}
             handleOutputFormatChange={handleOutputFormatChange}
-            setCurrentStep={setCurrentStep}
+            setCurrentStep={startUpload}
           />
         );
       case 1:
@@ -117,8 +156,6 @@ export default function OCRPage() {
             handleExtractText={handleExtractText}
             handleCancel={handleCancel}
             error={error}
-            handleRetry={handleRetry}
-            setCurrentStep={setCurrentStep}
           />
         );
       case 2:
