@@ -1,22 +1,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link, useLocation } from "react-router";
-
-// Assume these icons are imported from an icon library
-import {
-  BoxCubeIcon,
-  CalenderIcon,
-  ChevronDownIcon,
-  GridIcon,
-  HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
-  UserCircleIcon,
-  MailIcon, // Assuming InboxIcon is imported
-} from "../icons";
+import { ChevronDownIcon, HorizontaLDots } from "../icons";
 import { useSidebar } from "../context/SidebarContext";
+import { navItems, othersItems } from "./navItems";
 
 type NavItem = {
   name: string;
@@ -24,87 +10,6 @@ type NavItem = {
   path?: string;
   subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
 };
-
-const navItems: NavItem[] = [
-  {
-    icon: <GridIcon />,
-    name: "Панель управления",
-    subItems: [{ name: "Основная панель", path: "/main-dashboard", pro: false }],
-  },
-  
-  {
-    icon: <UserCircleIcon />,
-    name: "Профиль пользователя",
-    path: "/profile",
-  },
-  {
-    icon: <MailIcon/>,
-    name: "Email",
-    subItems: [{ name: "Входящие", path: "/inbox", pro: false }],
-  },
-  {
-    name: "Обработка документов",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "OCR", path: "/ocr", pro: false },
-      { name: "Форма создания КП", path: "/kp-manual-generation", pro: false },
-    ],
-  },  
-  {
-    name: "Формы",
-    icon: <ListIcon />,
-    subItems: [{ name: "Элементы формы", path: "/form-elements", pro: false }],
-  },
-  {
-    name: "Таблицы",
-    icon: <TableIcon />,
-    subItems: [{ name: "Основные таблицы", path: "/basic-tables", pro: false }],
-  },
-  {
-    icon: <CalenderIcon />,
-    name: "Календарь",
-    path: "/calendar",
-  },
-  {
-    name: "Страницы",
-    icon: <PageIcon />,
-    subItems: [
-      { name: "Пустая страница", path: "/blank", pro: false },
-      { name: "Ошибка 404", path: "/error-404", pro: false },
-    ],
-  },
-];
-
-const othersItems: NavItem[] = [
-  {
-    icon: <PieChartIcon />,
-    name: "Диаграммы",
-    subItems: [
-      { name: "Линейная диаграмма", path: "/line-chart", pro: false },
-      { name: "Гистограмма", path: "/bar-chart", pro: false },
-    ],
-  },
-  {
-    icon: <BoxCubeIcon />,
-    name: "Элементы UI",
-    subItems: [
-      { name: "Оповещения", path: "/alerts", pro: false },
-      { name: "Аватары", path: "/avatars", pro: false },
-      { name: "Значок", path: "/badge", pro: false },
-      { name: "Кнопки", path: "/buttons", pro: false },
-      { name: "Изображения", path: "/images", pro: false },
-      { name: "Видео", path: "/videos", pro: false },
-    ],
-  },
-  {
-    icon: <PlugInIcon />,
-    name: "Аутентификация",
-    subItems: [
-      { name: "Вход", path: "/signin", pro: false },
-      { name: "Регистрация", path: "/signup", pro: false },
-    ],
-  },
-];
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
@@ -119,7 +24,6 @@ const AppSidebar: React.FC = () => {
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
 
-  // const isActive = (path: string) => location.pathname === path;
   const isActive = useCallback(
     (path: string) => location.pathname === path,
     [location.pathname]
@@ -297,6 +201,19 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
+  const renderMenuSection = (title: string, items: NavItem[], menuType: "main" | "others") => (
+    <div>
+      <h2
+        className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
+          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
+        }`}
+      >
+        {isExpanded || isHovered || isMobileOpen ? title : <HorizontaLDots className="size-6" />}
+      </h2>
+      {renderMenuItems(items, menuType)}
+    </div>
+  );
+
   return (
     <aside
       className={`fixed mt-16 flex flex-col lg:mt-0 top-0 px-5 left-0 bg-white dark:bg-gray-900 dark:border-gray-800 text-gray-900 h-screen transition-all duration-300 ease-in-out z-50 border-r border-gray-200 
@@ -329,7 +246,7 @@ const AppSidebar: React.FC = () => {
               />
               <img
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/logo.webp"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -337,7 +254,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <img
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/logo.webp"
               alt="Logo"
               width={32}
               height={32}
@@ -348,38 +265,8 @@ const AppSidebar: React.FC = () => {
       <div className="flex flex-col overflow-y-auto duration-300 ease-linear no-scrollbar">
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
-            <div>
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Меню"
-                ) : (
-                  <HorizontaLDots className="size-6" />
-                )}
-              </h2>
-              {renderMenuItems(navItems, "main")}
-            </div>
-            <div className="">
-              <h2
-                className={`mb-4 text-xs uppercase flex leading-[20px] text-gray-400 ${
-                  !isExpanded && !isHovered
-                    ? "lg:justify-center"
-                    : "justify-start"
-                }`}
-              >
-                {isExpanded || isHovered || isMobileOpen ? (
-                  "Прочее"
-                ) : (
-                  <HorizontaLDots />
-                )}
-              </h2>
-              {renderMenuItems(othersItems, "others")}
-            </div>
+            {renderMenuSection("Меню", navItems, "main")}
+            
           </div>
         </nav>
       </div>

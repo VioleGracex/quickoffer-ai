@@ -24,8 +24,9 @@ import Inbox from "./pages/Inbox/Inbox";
 import PrivateRoute from "./components/PrivateRoute";
 import PublicRoute from "./components/PublicRoute";
 import OCRPage from "./pages/OCR/OCRPage"; // Import the OCRPage component
+import OfferAIForm from "./pages/AIForm/OfferAIForm"; // Import the OfferAIForm component
 
-export default function App() {
+const App: React.FC = () => {
   return (
     <Router>
       <ScrollToTop />
@@ -48,6 +49,7 @@ export default function App() {
             <Route path="/calendar" element={<Calendar />} />
             <Route path="/blank" element={<Blank />} />
             <Route path="/ocr" element={<OCRPage />} /> {/* Add OCRPage route */}
+            <Route path="/offer-ai" element={<OfferAIForm />} /> {/* Add OfferAIForm route */}
 
             {/* Forms */}
             <Route path="/form-elements" element={<FormElements />} />
@@ -74,4 +76,6 @@ export default function App() {
       </Routes>
     </Router>
   );
-}
+};
+
+export default App;

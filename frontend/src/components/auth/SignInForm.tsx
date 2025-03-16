@@ -21,12 +21,14 @@ export default function SignInForm() {
   const [password, setPassword] = useState<string>("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
+
   const { signIn, error, user } = useAuth();
   const navigate = useNavigate();
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     let valid = true;
+
 
     if (!validateEmail(email)) {
       setEmailError("Неверный формат email");
@@ -36,24 +38,20 @@ export default function SignInForm() {
     }
 
     if (!validateSignInPassword(password)) {
-      setPasswordError(
-        "Пароль должен содержать минимум 8 символов, включая буквы и цифры"
-      );
+      setPasswordError("Пароль должен содержать минимум 8 символов, включая буквы и цифры");
       valid = false;
     } else {
       setPasswordError(null);
     }
 
-    if (!valid) {
-      return;
-    }
+    if (!valid) return;
 
     try {
       await signIn(email, password);
       console.log("Sign-in successful");
-      navigate("/main-dashboard"); // Redirect after successful sign-in
     } catch (err) {
       console.error("Error during sign-in:", err);
+
     }
   };
 
@@ -190,7 +188,6 @@ export default function SignInForm() {
                 </div>
               </div>
             </form>
-            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Нет аккаунта? {""}
@@ -202,6 +199,7 @@ export default function SignInForm() {
                 </Link>
               </p>
             </div>
+            {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
           </div>
         </div>
       </div>

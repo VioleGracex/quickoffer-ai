@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unused-vars */
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useEffect } from 'react';
 import { jwtDecode } from 'jwt-decode';
 import api from '../api/axios'; // Ensure this path is correct
@@ -70,8 +72,13 @@ const useAuth = () => {
       const { access_token } = response.data;
       localStorage.setItem('token', access_token);
       console.log("Token set:", access_token);
+      fetchUserDetails(access_token);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message);
+      if (err.message === "Network Error" || err.message.includes("ERR_CONNECTION_REFUSED")) {
+        setError("Сервер недоступен. Пожалуйста, попробуйте позже.");
+      } else {
+        setError(err.response?.data?.detail || err.message);
+      }
       setIsAuthenticated(false);
       localStorage.removeItem('isAuthenticated');
     } finally {
@@ -86,7 +93,11 @@ const useAuth = () => {
       await api.post<User>('/users/', userData);
       console.log("User signed up:", userData);
     } catch (err: any) {
-      setError(err.response?.data?.detail || err.message);
+      if (err.message === "Network Error" || err.message.includes("ERR_CONNECTION_REFUSED")) {
+        setError("Сервер недоступен. Пожалуйста, попробуйте позже.");
+      } else {
+        setError(err.response?.data?.detail || err.message);
+      }
       throw err;
     } finally {
       setLoading(false);

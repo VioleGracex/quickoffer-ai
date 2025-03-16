@@ -9,13 +9,10 @@ interface StepOneProps {
   handleDeleteFile: () => void;
   ocrService: string;
   handleOcrServiceChange: (service: string) => void;
-  outputFormat: string;
-  handleOutputFormatChange: (format: string) => void;
-  setCurrentStep: (step: number) => void;
+  startUpload: () => void; 
 }
 
 const ocrServices = ['EasyOCR', 'Google Vision', 'Tesseract OCR'];
-const outputFormats = ['.txt', '.pdf', '.docx'];
 const supportedFileTypes = ['image/jpeg', 'image/png', 'application/pdf'];
 
 const StepOne: React.FC<StepOneProps> = ({
@@ -24,9 +21,7 @@ const StepOne: React.FC<StepOneProps> = ({
   handleDeleteFile,
   ocrService,
   handleOcrServiceChange,
-  outputFormat,
-  handleOutputFormatChange,
-  setCurrentStep
+  startUpload,
 }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -82,23 +77,11 @@ const StepOne: React.FC<StepOneProps> = ({
           ))}
         </select>
       </div>
-      <div>
-        <label className="block mb-2 text-sm font-medium text-gray-700 dark:text-gray-300">Формат вывода</label>
-        <select
-          className="block w-full mt-1 p-2 border border-gray-300 rounded-md shadow-sm dark:bg-gray-800 dark:border-gray-600 dark:text-gray-300"
-          value={outputFormat}
-          onChange={(e) => handleOutputFormatChange(e.target.value)}
-        >
-          {outputFormats.map(format => (
-            <option key={format} value={format}>{format}</option>
-          ))}
-        </select>
-      </div>
       <div className="flex justify-center">
         <Button
           variant="contained"
           color="primary"
-          onClick={() => setCurrentStep(1)}
+          onClick={startUpload} 
           startIcon={<FiUploadCloud />}
           disabled={!file || !!errorMessage}
         >

@@ -1,4 +1,3 @@
-import os
 from pydantic_settings import BaseSettings
 
 class Settings(BaseSettings):
@@ -8,6 +7,8 @@ class Settings(BaseSettings):
     ADMIN_EMAIL: str
     ADMIN_PASSWORD: str
     ALGORITHM: str
+    OPENAI_API_KEY: str  # Add the OpenAI API key here
+    DEEPSEEK_API_KEY: str  # Add the DeepSeek API key here
 
     class Config:
         env_file = ".env"

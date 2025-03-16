@@ -1,33 +1,41 @@
-import React, { useState } from "react";
-import api from "../../api/axios";
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-unused-vars */
+import { useState, useEffect, useCallback, useRef } from "react";
+import { uploadFile, cancelOcr } from "../../routes/OCR_api.tsx";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-import { Stepper, Step, StepLabel } from '@mui/material';
+import { Stepper, Step, StepLabel } from "@mui/material";
 import StepOne from "../../components/ocr/StepOne";
 import StepTwo from "../../components/ocr/StepTwo";
 import StepThree from "../../components/ocr/StepThree";
 import { useTheme } from "../../context/ThemeContext"; // Use your custom ThemeContext
+import { v4 as uuidv4 } from "uuid";
 
 interface RequestHistory {
   fileName: string;
   ocrService: string;
-  outputFormat: string;
   result: string;
 }
 
-const steps = ['Загрузите файл и выберите параметры', 'Загрузка', 'Результат'];
+const steps = ["Загрузите файл и выберите параметры", "Загрузка", "Результат"];
 
 export default function OCRPage() {
   const [file, setFile] = useState<File | null>(null);
-  const [ocrService, setOcrService] = useState<string>('EasyOCR');
-  const [outputFormat, setOutputFormat] = useState<string>('.txt');
-  const [ocrResult, setOcrResult] = useState<string>('');
+  const [ocrService, setOcrService] = useState<string>("EasyOCR");
+  const [ocrResult, setOcrResult] = useState<string>("");
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [history, setHistory] = useState<RequestHistory[]>([]);
   const [error, setError] = useState<string | null>(null);
+  const [requestId, setRequestId] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(false);
 
+  const requestIdRef = useRef<string | null>(requestId);
   const { theme } = useTheme(); // Get theme from custom context
+
+  useEffect(() => {
+    requestIdRef.current = requestId;
+  }, [requestId]);
 
   const handleFileUpload = (uploadedFile: File) => {
     setFile(uploadedFile);
@@ -41,54 +49,99 @@ export default function OCRPage() {
     setOcrService(service);
   };
 
-  const handleOutputFormatChange = (format: string) => {
-    setOutputFormat(format);
+  const handleExtractText = useCallback(
+    async (abortController: AbortController): Promise<void> => {
+      setError(null);
+      setLoading(true);
+      if (file && requestIdRef.current) {
+        try {
+          const data = await uploadFile(file, ocrService, requestIdRef.current);
+
+          if (data.status === "cancelled") {
+            handleCleanup();
+          } else if (data.status === "success" && data.request_id === requestIdRef.current) {
+            setOcrResult(data.text || "Результат OCR пуст.");
+            setHistory((prevHistory) => [
+              ...prevHistory,
+              {
+                fileName: file.name,
+                ocrService,
+                result: `Extracted text from ${file.name}`,
+              },
+            ]);
+            setCurrentStep(2);
+          } else {
+            setError("Request ID mismatch. Please try again.");
+          }
+        } catch (error: any) {
+          if (error.name === "AbortError") {
+            console.log("OCR request was aborted.");
+            handleCleanup();
+          } else {
+            setError("Произошла ошибка при извлечении текста. Попробуйте еще раз.");
+          }
+        } finally {
+          setLoading(false);
+        }
+      }
+    },
+    [file, ocrService]
+  );
+
+  const handleCleanup = () => {
+    setRequestId(null); // Reset the request ID
+    setError(null); // Clear error
+    setOcrResult(""); // Clear the result
+    setFile(null); // Clear the file
+    setOcrService("EasyOCR"); // Reset the OCR service to default
+    setCurrentStep(0); // Move to StepOne
+    setLoading(false); // Set loading to false
   };
 
-  const handleExtractText = async (abortController: AbortController): Promise<void> => {
+  const startUpload = () => {
+    setRequestId(uuidv4());
+    setCurrentStep(1);
+    const abortController = new AbortController();
+    handleExtractText(abortController);
+  };
+
+  useEffect(() => {
+    if (currentStep === 1 && file && requestId) {
+      const abortController = new AbortController();
+      handleExtractText(abortController);
+    }
+  }, [file, requestId, currentStep, handleExtractText]);
+
+  const handleRetry = () => {
     setError(null);
-    if (file) {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('ocr_service', ocrService);
-      formData.append('output_format', outputFormat);
+    const abortController = new AbortController();
+    handleExtractText(abortController);
+  };
+
+  const handleCancel = async () => {
+    if (requestIdRef.current) {
+      // Call the backend API to cancel the OCR task
+      console.log("Canceling OCR task with request ID:", requestIdRef.current);
+      handleCleanup();
 
       try {
-        const response = await fetch(`${api.defaults.baseURL}/files/upload-ocr/`, {
-          method: 'POST',
-          body: formData,
-          signal: abortController.signal,
-        });
+        const data = await cancelOcr(requestIdRef.current);
+        console.log("try cancel");
 
-        if (response.ok) {
-          const data = await response.json();
-          setOcrResult(data.text);
-          setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
-          setCurrentStep(2);
+        if (data.status === "success") {
+         //test
         } else {
-          setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
+          setError("Ошибка при отмене запроса. Попробуйте еще раз.");
         }
       } catch (error) {
-        if (error.name !== 'AbortError') {
-          setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
-        }
+        setError("Ошибка при отмене запроса. Попробуйте еще раз.");
       }
     }
   };
 
-  const handleRetry = () => {
-    setError(null);
-    handleExtractText(new AbortController());
-  };
-
-  const handleCancel = () => {
-    setCurrentStep(0);
-    setError(null);
-  };
-
   const handleDownloadText = () => {
     const element = document.createElement("a");
-    const fileBlob = new Blob([ocrResult], { type: 'text/plain' });
+    const fileBlob = new Blob([ocrResult], { type: "text/plain" });
     element.href = URL.createObjectURL(fileBlob);
     element.download = "ocr_result.txt";
     document.body.appendChild(element);
@@ -105,9 +158,7 @@ export default function OCRPage() {
             handleDeleteFile={handleDeleteFile}
             ocrService={ocrService}
             handleOcrServiceChange={handleOcrServiceChange}
-            outputFormat={outputFormat}
-            handleOutputFormatChange={handleOutputFormatChange}
-            setCurrentStep={setCurrentStep}
+            startUpload={startUpload} // Use startUpload to initiate the process
           />
         );
       case 1:
@@ -117,8 +168,8 @@ export default function OCRPage() {
             handleExtractText={handleExtractText}
             handleCancel={handleCancel}
             error={error}
-            handleRetry={handleRetry}
-            setCurrentStep={setCurrentStep}
+            handleRetry={handleRetry} // Pass handleRetry as a prop
+            loading={loading} // Pass loading state
           />
         );
       case 2:
@@ -126,8 +177,7 @@ export default function OCRPage() {
           <StepThree
             ocrResult={ocrResult}
             handleDownloadText={handleDownloadText}
-            setCurrentStep={setCurrentStep}
-            outputFormat={outputFormat}
+            handleCleanup={handleCleanup}
           />
         );
       default:
@@ -145,15 +195,15 @@ export default function OCRPage() {
       <ComponentCard title="OCR">
         <div className="max-w-5xl mx-auto dark:text-white">
           <Stepper activeStep={currentStep} alternativeLabel>
-            {steps.map((label, index) => (
-              <Step key={label} onClick={() => setCurrentStep(index)}>
-                <StepLabel 
-                  sx={{ 
-                    '& .MuiStepLabel-label': { 
-                      color: theme === 'dark' ? '#fff' : 'inherit', // Using custom theme context
-                      '&.Mui-active': { color: 'primary.main' }, 
-                      '&.Mui-completed': { color: 'primary.main' } 
-                    }
+            {steps.map((label) => (
+              <Step key={label}>
+                <StepLabel
+                  sx={{
+                    "& .MuiStepLabel-label": {
+                      color: theme === "dark" ? "#fff" : "inherit", // Using custom theme context
+                      "&.Mui-active": { color: "primary.main" },
+                      "&.Mui-completed": { color: "primary.main" },
+                    },
                   }}
                 >
                   {label}
@@ -168,10 +218,15 @@ export default function OCRPage() {
         <ul className="list-disc pl-5">
           {history.map((request, index) => (
             <li key={index} className="mb-2">
-              <p><strong>Файл:</strong> {request.fileName}</p>
-              <p><strong>OCR Сервис:</strong> {request.ocrService}</p>
-              <p><strong>Формат:</strong> {request.outputFormat}</p>
-              <p><strong>Результат:</strong> {request.result}</p>
+              <p>
+                <strong>Файл:</strong> {request.fileName}
+              </p>
+              <p>
+                <strong>OCR Сервис:</strong> {request.ocrService}
+              </p>
+              <p>
+                <strong>Результат:</strong> {request.result}
+              </p>
             </li>
           ))}
         </ul>
