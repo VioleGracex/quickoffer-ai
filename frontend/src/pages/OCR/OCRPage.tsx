@@ -54,8 +54,8 @@ export default function OCRPage() {
     if (file && requestId) {
       const formData = new FormData();
       formData.append('file', file);
-      formData.append('ocr_service', ocrService);
-      formData.append('output_format', outputFormat);
+      formData.append('ocr_service', ocrService || 'EasyOCR'); // Default to EasyOCR
+      formData.append('output_format', outputFormat || '.txt'); // Default to .txt
       formData.append('request_id', requestId);
 
       try {
@@ -88,7 +88,10 @@ export default function OCRPage() {
           }
         }
       } catch (error: any) {
-        if (error.name !== 'AbortError') {
+        if (error.name === 'AbortError') {
+          console.log('OCR request was aborted.');
+          setError('OCR request was cancelled.');
+        } else {
           setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
         }
       }
@@ -115,17 +118,26 @@ export default function OCRPage() {
 
   const handleCancel = async () => {
     if (requestId) {
+      // Call the backend API to cancel the OCR task
+      console.log('Canceling OCR task with request ID:', requestId);
       const formData = new FormData();
       formData.append('request_id', requestId);
+  
       try {
         const response = await fetch(`${api.defaults.baseURL}/files/cancel-ocr/`, {
           method: 'POST',
           body: formData,
         });
+  
         if (response.ok) {
-          setRequestId(null);
-          setCurrentStep(0);
-          setError(null);
+          // Handle successful cancel
+          setRequestId(null); // Reset the request ID
+          setCurrentStep(0); // Go back to Step 0
+          setError(null); // Clear error
+          setOcrResult(''); // Clear the result
+          setFile(null); // Clear the file
+          setOcrService('EasyOCR'); // Reset the OCR service to default
+          setOutputFormat('.txt'); // Reset the output format to default
         } else {
           setError('Ошибка при отмене запроса. Попробуйте еще раз.');
         }

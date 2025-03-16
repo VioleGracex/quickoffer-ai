@@ -36,6 +36,7 @@ const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel
       .finally(() => {
         setLoading(false);
         setRetrying(false); // Reset retry flag after one retry attempt
+        console.log("cancel");
       });
   }, [file, handleExtractText]);
 

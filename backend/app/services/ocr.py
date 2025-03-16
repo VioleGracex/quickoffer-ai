@@ -1,10 +1,9 @@
 import easyocr
 import fitz  # PyMuPDF
 import pandas as pd
-from PIL import Image
 from fastapi import UploadFile, HTTPException
 import logging
-import numpy as np
+from app.services.task_manager import is_task_cancelled
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -33,19 +32,34 @@ def read_excel(file: UploadFile):
         logger.error(f"Error reading Excel: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading Excel: {e}")
 
-def read_image_with_easyocr(file: UploadFile):
+def read_image_with_easyocr(file: UploadFile, request_id: str):
     try:
         image_bytes = file.file.read()  # Read file as bytes
+
+        # Check if task was cancelled before starting OCR
+        if is_task_cancelled(request_id):
+            return "OCR request was cancelled"
+
         result = easyocr_reader.readtext(image_bytes)
-        # Join the text segments with newline characters
-        text = "\n".join([text for _, text, _ in result])
-        return text
+
+        text_list = []
+        for _, text, _ in result:
+            # Periodically check for cancellation during processing
+            if is_task_cancelled(request_id):
+                return "OCR request was cancelled"
+            text_list.append(text)
+
+        return "\n".join(text_list)
+
     except Exception as e:
         logger.error(f"Error reading image with EasyOCR: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading image with EasyOCR: {e}")
 
-def read_image(file: UploadFile, ocr_service: str):
+def read_image(file: UploadFile, ocr_service: str, request_id: str):
+    if is_task_cancelled(request_id):
+        return "OCR request was cancelled"
+    print(f"Reading image with {ocr_service}")
     if ocr_service == 'EasyOCR':
-        return read_image_with_easyocr(file)
+        return read_image_with_easyocr(file, request_id)
     else:
         raise HTTPException(status_code=400, detail=f"OCR service {ocr_service} not supported.")
