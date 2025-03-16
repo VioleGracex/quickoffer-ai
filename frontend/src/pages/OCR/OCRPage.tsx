@@ -58,7 +58,7 @@ export default function OCRPage() {
           const data = await uploadFile(file, ocrService, requestIdRef.current);
 
           if (data.status === "cancelled") {
-            handleCancelCleanup();
+            handleCleanup();
           } else if (data.status === "success" && data.request_id === requestIdRef.current) {
             setOcrResult(data.text || "Результат OCR пуст.");
             setHistory((prevHistory) => [
@@ -76,7 +76,7 @@ export default function OCRPage() {
         } catch (error: any) {
           if (error.name === "AbortError") {
             console.log("OCR request was aborted.");
-            handleCancelCleanup();
+            handleCleanup();
           } else {
             setError("Произошла ошибка при извлечении текста. Попробуйте еще раз.");
           }
@@ -88,7 +88,7 @@ export default function OCRPage() {
     [file, ocrService]
   );
 
-  const handleCancelCleanup = () => {
+  const handleCleanup = () => {
     setRequestId(null); // Reset the request ID
     setError(null); // Clear error
     setOcrResult(""); // Clear the result
@@ -110,7 +110,6 @@ export default function OCRPage() {
       const abortController = new AbortController();
       handleExtractText(abortController);
     }
-    console.log("Request ID updated:", requestId);
   }, [file, requestId, currentStep, handleExtractText]);
 
   const handleRetry = () => {
@@ -123,13 +122,14 @@ export default function OCRPage() {
     if (requestIdRef.current) {
       // Call the backend API to cancel the OCR task
       console.log("Canceling OCR task with request ID:", requestIdRef.current);
+      handleCleanup();
 
       try {
         const data = await cancelOcr(requestIdRef.current);
         console.log("try cancel");
 
         if (data.status === "success") {
-          handleCancelCleanup();
+         //test
         } else {
           setError("Ошибка при отмене запроса. Попробуйте еще раз.");
         }
@@ -177,7 +177,7 @@ export default function OCRPage() {
           <StepThree
             ocrResult={ocrResult}
             handleDownloadText={handleDownloadText}
-            setCurrentStep={setCurrentStep}
+            handleCleanup={handleCleanup}
           />
         );
       default:

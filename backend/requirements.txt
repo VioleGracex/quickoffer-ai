@@ -18,3 +18,5 @@ opencv-python-headless
 pillow
 filetype
 pandas
+deepseek
+google-cloud-vision

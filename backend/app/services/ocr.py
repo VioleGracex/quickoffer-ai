@@ -1,3 +1,4 @@
+""" ocr.py """
 import easyocr
 import logging
 from fastapi import UploadFile, HTTPException

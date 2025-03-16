@@ -39,24 +39,27 @@ const OfferAIForm: React.FC = () => {
   const [productDataFile, setProductDataFile] = useState<File | null>(null);
   const [generatedText, setGeneratedText] = useState<string>('');
   const [pdfLink, setPdfLink] = useState<string>('');
-/*   const [selectedProducts, setSelectedProducts] = useState<string[]>([]); */
+  const [model, setModel] = useState<string>('gpt-4-turbo');
+  const [api, setApi] = useState<string>('openai');
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setClientInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-/*   const handleFileChange = (setFile: React.Dispatch<React.SetStateAction<File | null>>) => (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      setFile(acceptedFiles[0]);
-    }
-  }; */
-
   const handleGenerateText = async () => {
     const formData = new FormData();
     formData.append('clientInfo', JSON.stringify(clientInfo));
-    if (templateFile) formData.append('templateFile', templateFile);
-    if (productDataFile) formData.append('productDataFile', productDataFile);
+    formData.append('model', model);
+    formData.append('api', api);
+    if (templateFile) {
+      formData.append('templateFile', templateFile);
+      formData.append('templateFileType', templateFile.type);
+    }
+    if (productDataFile) {
+      formData.append('productDataFile', productDataFile);
+      formData.append('productDataFileType', productDataFile.type);
+    }
 
     try {
       const data = await generateProposal(formData);
@@ -113,13 +116,45 @@ const OfferAIForm: React.FC = () => {
     });
   };
 
+  const getModelOptions = () => {
+    if (api === 'openai') {
+      return (
+        <>
+          <option value="gpt-4">GPT-4</option>
+          <option value="gpt-4-turbo">GPT-4 Turbo</option>
+          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
+        </>
+      );
+    } else if (api === 'deepseek') {
+      return (
+        <>
+          <option value="deepseek-chat">DeepSeek Chat</option>
+          <option value="deepseek-chat-mini">DeepSeek Chat Mini</option>
+        </>
+      );
+    }
+  };
+
   return (
     <div className="dark:bg-gray-900 dark:text-white">
       <PageMeta title="Создать КП" description="Генерация КП с помощью AI" />
       <PageBreadcrumb pageTitle="Создать КП" />
       <ComponentCard title="Создать КП">
-      <div className="max-w-5xl mx-auto dark:text-white">
+        <div className="max-w-5xl mx-auto dark:text-white">
           <ClientInfoForm clientInfo={clientInfo} handleInputChange={handleInputChange} fillTestData={fillTestData} />
+          <div className="mb-4 mt-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Выберите API</label>
+            <select value={api} onChange={(e) => setApi(e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+              <option value="openai">OpenAI</option>
+              <option value="deepseek">DeepSeek</option>
+            </select>
+          </div>
+          <div className="mb-4">
+            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300">Выберите модель</label>
+            <select value={model} onChange={(e) => setModel(e.target.value)} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
+              {getModelOptions()}
+            </select>
+          </div>
           <FileUpload setTemplateFile={setTemplateFile} setProductDataFile={setProductDataFile} templateFile={templateFile} productDataFile={productDataFile} />
           <GeneratedText generatedText={generatedText} setGeneratedText={setGeneratedText} />
           <ActionButtons

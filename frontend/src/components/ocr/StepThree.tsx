@@ -8,13 +8,13 @@ import { Document, Packer, Paragraph, TextRun } from "docx";
 interface StepThreeProps {
   ocrResult: string;
   handleDownloadText: () => void;
-  setCurrentStep: (step: number) => void;
+  handleCleanup: () => void;
 }
 
 const StepThree: React.FC<StepThreeProps> = ({
   ocrResult,
   handleDownloadText,
-  setCurrentStep,
+  handleCleanup,
 }) => {
   const [editableOcrResult, setEditableOcrResult] = useState(ocrResult);
 
@@ -130,7 +130,7 @@ const StepThree: React.FC<StepThreeProps> = ({
         {
           variant: "contained",
           color: "primary",
-          onClick: () => setCurrentStep(0),
+          onClick: () => handleCleanup(),
           startIcon: React.createElement(FiArrowLeft),
         },
         "Начать заново"
