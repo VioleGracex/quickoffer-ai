@@ -1,5 +1,4 @@
 import easyocr
-import asyncio
 import logging
 from fastapi import UploadFile, HTTPException
 from app.services.task_manager import is_task_cancelled
@@ -13,7 +12,7 @@ logger = logging.getLogger(__name__)
 
 async def ocr_task(file: UploadFile, request_id: str, result: list):
     try:
-        image_bytes = file.file.read()  # Read file as bytes
+        image_bytes = await file.read()  # Read file as bytes
         
         # Check if task was cancelled before starting OCR
         if is_task_cancelled(request_id):
@@ -42,16 +41,16 @@ async def ocr_task(file: UploadFile, request_id: str, result: list):
 async def read_image_with_easyocr(file: UploadFile, request_id: str):
     result = []
     
-    # Start the OCR process in an asyncio task
+    # Start the OCR process
     await ocr_task(file, request_id, result)
     
     # Return the result collected by the task
     return result
 
-def read_pdf(file: UploadFile):
+async def read_pdf(file: UploadFile):
     try:
         import fitz  # PyMuPDF
-        doc = fitz.open(stream=file.file.read(), filetype="pdf")
+        doc = fitz.open(stream=await file.read(), filetype="pdf")
         text = ""
         for page in doc:
             text += page.get_text("text")
@@ -60,7 +59,7 @@ def read_pdf(file: UploadFile):
         logger.error(f"Error reading PDF: {e}")
         raise HTTPException(status_code=500, detail=f"Error reading PDF: {e}")
 
-def read_excel(file: UploadFile):
+async def read_excel(file: UploadFile):
     try:
         import pandas as pd
         df = pd.read_excel(file.file)

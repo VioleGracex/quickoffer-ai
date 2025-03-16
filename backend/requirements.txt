@@ -1,3 +1,6 @@
+aiofiles
+openai
+fpdf
 fastapi
 uvicorn
 sqlalchemy

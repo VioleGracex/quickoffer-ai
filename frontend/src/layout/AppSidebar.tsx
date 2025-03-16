@@ -246,7 +246,7 @@ const AppSidebar: React.FC = () => {
               />
               <img
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/logo.webp"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -254,7 +254,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <img
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/logo.webp"
               alt="Logo"
               width={32}
               height={32}
@@ -266,7 +266,7 @@ const AppSidebar: React.FC = () => {
         <nav className="mb-6">
           <div className="flex flex-col gap-4">
             {renderMenuSection("Меню", navItems, "main")}
-            {renderMenuSection("Прочее", othersItems, "others")}
+            
           </div>
         </nav>
       </div>
