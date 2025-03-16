@@ -1,15 +1,12 @@
 from fastapi import APIRouter, UploadFile, File, Form, HTTPException, Request
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel
-import aiofiles
 import json
-import tempfile
-import os
-import pandas as pd
 from app.services.ai import generate_proposal_text
 from app.services.pdf import create_pdf
 from app.services.email import send_email
 from app.services.ocr import read_image, read_pdf, read_excel
+from app.services.file_services import save_file_to_tmp, read_file_with_fallback, read_csv, read_docx
 import logging
 
 router = APIRouter()
@@ -22,40 +19,16 @@ class EmailRequest(BaseModel):
     email: str
     pdf_link: str
 
-async def save_file_to_tmp(file: UploadFile) -> str:
+def translate_error_message(error_message: str) -> str:
     """
-    Save the uploaded file to a temporary file and return its path.
+    Translate common error messages to user-friendly Russian messages.
     """
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
-    file_path = temp_file.name  # Get the full path of the temporary file
-    
-    # Save file content
-    async with aiofiles.open(file_path, 'wb') as out_file:
-        content = await file.read()
-        await out_file.write(content)
-
-    return file_path
-
-async def read_file_with_fallback(file_path: str, encodings: list) -> str:
-    """
-    Attempt to read a file with a list of encodings, falling back if necessary.
-    """
-    for encoding in encodings:
-        try:
-            async with aiofiles.open(file_path, 'r', encoding=encoding) as file:
-                return await file.read()
-        except UnicodeDecodeError as e:
-            logger.warning(f"Failed to decode with encoding {encoding}: {e}")
-            continue
-    raise HTTPException(status_code=400, detail=f"Unable to decode file with provided encodings: {encodings}")
-
-async def read_csv(file: UploadFile) -> str:
-    """
-    Read a CSV file and return its contents as a string.
-    """
-    file_path = await save_file_to_tmp(file)
-    df = pd.read_csv(file_path)
-    return df.to_string()
+    if "Insufficient Balance" in error_message:
+        return "Недостаточно средств на счету."
+    elif "invalid_request_error" in error_message:
+        return "Ошибка в запросе."
+    else:
+        return "Произошла ошибка при обработке вашего запроса."
 
 @router.post("/generate")
 async def generate_proposal(
@@ -77,7 +50,7 @@ async def generate_proposal(
         selected_products = json.loads(form_dict.get("selectedProducts", "[]"))
 
     except json.JSONDecodeError:
-        raise HTTPException(status_code=400, detail="Invalid JSON format")
+        raise HTTPException(status_code=400, detail="Неверный формат JSON")
 
     # Save uploaded files
     template_file_path = await save_file_to_tmp(templateFile)
@@ -90,6 +63,8 @@ async def generate_proposal(
         template_text = await read_pdf(templateFile)
     elif templateFileType in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']:
         template_text = await read_excel(templateFile)
+    elif templateFileType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        template_text = await read_docx(templateFile)
     else:
         template_text = await read_file_with_fallback(template_file_path, ['utf-8', 'windows-1251'])
 
@@ -101,11 +76,18 @@ async def generate_proposal(
         product_data_text = await read_excel(productDataFile)
     elif productDataFileType == 'text/csv':
         product_data_text = await read_csv(productDataFile)
+    elif productDataFileType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
+        product_data_text = await read_docx(productDataFile)
     else:
         product_data_text = await read_file_with_fallback(product_data_file_path, ['utf-8', 'windows-1251'])
 
-    # Generate proposal text
-    generated_text = await generate_proposal_text(client_info, template_text, product_data_text, selected_products, model, api)
+    try:
+        # Generate proposal text
+        generated_text = await generate_proposal_text(client_info, template_text, product_data_text, selected_products, model, api)
+    except Exception as e:
+        logger.error(f"Real error: {str(e)}")
+        translated_error = translate_error_message(str(e))
+        raise HTTPException(status_code=500, detail=f"Ошибка при генерации текста предложения: {translated_error}")
 
     # Log all extracted form data
     logger.info("📌 Extracted Form Data: %s", form_dict)
@@ -117,9 +99,14 @@ async def save_pdf(templateFile: UploadFile = File(...), generatedText: str = Fo
     """
     Save the template file and generate the PDF.
     """
-    template_path = await save_file_to_tmp(templateFile)
-    pdf_path = await create_pdf(template_path, generatedText)
-    return JSONResponse(content={"pdfLink": pdf_path})
+    try:
+        template_path = await save_file_to_tmp(templateFile)
+        pdf_path = await create_pdf(template_path, generatedText)
+        return JSONResponse(content={"pdfLink": pdf_path})
+    except Exception as e:
+        logger.error(f"Real error: {str(e)}")
+        translated_error = translate_error_message(str(e))
+        raise HTTPException(status_code=500, detail=f"Ошибка при сохранении PDF: {translated_error}")
 
 @router.post("/send-email")
 async def send_email_route(request: EmailRequest):
@@ -128,6 +115,8 @@ async def send_email_route(request: EmailRequest):
     """
     try:
         await send_email(request.email, request.pdf_link)
-        return JSONResponse(content={"message": "Email sent successfully!"})
+        return JSONResponse(content={"message": "Email успешно отправлен!"})
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Failed to send email: {str(e)}")
+        logger.error(f"Real error: {str(e)}")
+        translated_error = translate_error_message(str(e))
+        raise HTTPException(status_code=500, detail=f"Ошибка при отправке Email: {translated_error}")

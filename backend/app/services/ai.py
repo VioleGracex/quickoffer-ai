@@ -39,19 +39,21 @@ async def generate_proposal_text(client_info, template_text, product_data_text, 
     print("Starting proposal text generation.")
 
     if api == "openai":
-        response = openai.Completion.create(
-            engine=model,
-            prompt=prompt,
+        response = openai.ChatCompletion.create(
+            model=model,
+            messages=[
+                {"role": "system", "content": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
+                {"role": "user", "content": prompt},
+            ],
             max_tokens=500,
             stop=["==="]
         )
     elif api == "deepseek":
-        from deepseek import DeepSeek
-        client = DeepSeek(api_key=settings.DEEPSEEK_API_KEY)
-        response = client.chat.completions.create(
+        deepseek_client = openai.OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
+        response = deepseek_client.chat.completions.create(
             model=model,
             messages=[
-                {"role": "system", "content": "You are a helpful assistant"},
+                {"role": "system", "content": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
                 {"role": "user", "content": prompt},
             ],
             stream=False
@@ -59,4 +61,4 @@ async def generate_proposal_text(client_info, template_text, product_data_text, 
     else:
         raise ValueError("Unsupported API provider")
 
-    return response.choices[0].message.content.strip() if api == "deepseek" else response.choices[0].text.strip()
+    return response.choices[0].message.content.strip() if api == "deepseek" else response.choices[0].message.content.strip()

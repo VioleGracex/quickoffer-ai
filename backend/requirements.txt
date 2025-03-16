@@ -20,3 +20,4 @@ filetype
 pandas
 deepseek
 google-cloud-vision
+PyPDF2
