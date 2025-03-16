@@ -69,15 +69,25 @@ export default function OCRPage() {
           const data = await response.json();
           if (data.status === 'cancelled') {
             setError('OCR request was cancelled.');
-          } else if (data.request_id === requestId) {
-            setOcrResult(data.text);
-            setHistory([...history, { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }]);
-            setCurrentStep(2);
+          } else if (data.status === 'success' && data.request_id === requestId) {
+            setOcrResult(data.text || 'Результат OCR пуст.');
+            setHistory([
+              ...history,
+              { fileName: file.name, ocrService, outputFormat, result: `Extracted text from ${file.name}` }
+            ]);
+            setCurrentStep(2); // Move to StepThree
+          } else {
+            setError('Request ID mismatch. Please try again.');
           }
         } else {
-          setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
+          const data = await response.json();
+          if (data.status === 'busy') {
+            setError('Сервер занят. Пожалуйста, попробуйте позже.');
+          } else {
+            setError(`Произошла ошибка: ${data.message}`);
+          }
         }
-      } catch (error) {
+      } catch (error: any) {
         if (error.name !== 'AbortError') {
           setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
         }
@@ -112,9 +122,6 @@ export default function OCRPage() {
           method: 'POST',
           body: formData,
         });
-        setRequestId(null);
-          setCurrentStep(0);
-          setError(null);
         if (response.ok) {
           setRequestId(null);
           setCurrentStep(0);
