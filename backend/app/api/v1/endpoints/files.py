@@ -1,3 +1,4 @@
+import uuid
 from fastapi import APIRouter, File, UploadFile, Form, HTTPException, BackgroundTasks
 from fastapi.responses import JSONResponse, PlainTextResponse, StreamingResponse
 import filetype
@@ -6,12 +7,77 @@ import fitz  # PyMuPDF
 import io
 import logging
 from docx import Document
+import threading
+from queue import Queue
 
 router = APIRouter()
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
+
+# Dictionary to store ongoing tasks
+tasks = {}
+
+# Queue to store OCR tasks
+max_queue_size = 5
+ocr_queue = Queue(maxsize=max_queue_size)
+
+# Semaphore to limit the number of concurrent OCR tasks
+max_concurrent_tasks = 2
+semaphore = threading.Semaphore(max_concurrent_tasks)
+
+def read_image_task(file_contents: bytes, filename: str, ocr_service: str, task_id: str, cancel_event: threading.Event):
+    try:
+        print(f"Task {task_id} started with OCR service {ocr_service}")
+        kind = filetype.guess(file_contents)
+        print(f"File type detected: {kind}")
+
+        if not kind:
+            tasks[task_id]['status'] = 'failed'
+            tasks[task_id]['error'] = 'Unsupported file type'
+            print(f"Task {task_id} failed: Unsupported file type")
+            return
+
+        if cancel_event.is_set():
+            tasks[task_id]['status'] = 'cancelled'
+            print(f"Task {task_id} cancelled before processing")
+            return
+
+        if kind.mime.startswith('image/'):
+            text = read_image(file_contents, ocr_service)
+            print(f"start read image")
+            if cancel_event.is_set():
+                tasks[task_id]['status'] = 'cancelled'
+                print(f"Task {task_id} cancelled during processing")
+                return
+            tasks[task_id]['result'] = text
+            tasks[task_id]['status'] = 'completed'
+            print(f"Task {task_id} completed successfully")
+        else:
+            tasks[task_id]['status'] = 'failed'
+            tasks[task_id]['error'] = 'Unsupported file type for OCR'
+            print(f"Task {task_id} failed: Unsupported file type for OCR")
+    except Exception as e:
+        tasks[task_id]['status'] = 'failed'
+        tasks[task_id]['error'] = str(e)
+        print(f"Task {task_id} failed with exception: {e}")
+    finally:
+        semaphore.release()  # Release the semaphore after task completion
+
+def ocr_worker():
+    while True:
+        task = ocr_queue.get()
+        if task is None:
+            break
+        semaphore.acquire()
+        read_image_task(*task)
+        ocr_queue.task_done()
+
+# Start worker thread
+worker_thread = threading.Thread(target=ocr_worker)
+worker_thread.daemon = True
+worker_thread.start()
 
 @router.post("/upload/")
 async def upload_file(file: UploadFile = File(...)):
@@ -38,34 +104,55 @@ async def upload_file(file: UploadFile = File(...)):
 
 @router.post("/upload-ocr/")
 async def upload_ocr_file(
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(...),
     ocr_service: str = Form(...),
     output_format: str = Form(...),
 ):
-    print(f"Received file: {file.filename}, OCR service: {ocr_service}, Output format: {output_format}")
+    # Check if the queue is full
+    if ocr_queue.full():
+        raise HTTPException(status_code=503, detail="Сервер перегружен, попробуйте позже")
+
+    # Generate a unique task ID
+    task_id = str(uuid.uuid4())  # Ensures each request is treated as a new OCR order
+    cancel_event = threading.Event()
+    tasks[task_id] = {'status': 'processing', 'result': None, 'error': None, 'cancel_event': cancel_event}
+
+    # Read file content into memory
+    file_contents = await file.read()
+    file.file.seek(0)
+
+    # Add task to queue
+    ocr_queue.put((file_contents, file.filename, ocr_service, task_id, cancel_event))
+
+    return JSONResponse(content={"status": "queued", "task_id": task_id})
+
+@router.get("/ocr-status/")
+async def ocr_status(task_id: str):
+    print(f"Checking status for task {task_id}")
+    if task_id not in tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
     
+    return JSONResponse(content=tasks[task_id])
+
+@router.post("/cancel-ocr/")
+async def cancel_ocr(task_id: str):
+    print(f"Cancelling task {task_id}")
+    if task_id not in tasks:
+        raise HTTPException(status_code=404, detail="Task not found")
+
+    cancel_event = tasks[task_id]['cancel_event']
+    cancel_event.set()
+    tasks[task_id]['status'] = 'cancelled'
+    return JSONResponse(content={"status": "cancelled", "task_id": task_id})
+
+@router.post("/convert/")
+async def convert_text(
+    text: str = Form(...),
+    output_format: str = Form(...),
+):
     try:
-        kind = filetype.guess(file.file)
-        file.file.seek(0)  # Reset file pointer after detection
-        
-        if not kind:
-            raise HTTPException(status_code=400, detail="Unsupported file type")
-
-        print(f"Detected file type: {kind.mime}")
-
-        if kind.mime.startswith('image/'):
-            text = read_image(file, ocr_service)
-            print(f"OCR result: {text}")
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported file type for OCR")
-
-        result = {"status": "success", "text": text}
-
-        if output_format == '.txt':
-            print("Returning plain text response")
-            return JSONResponse(content={"status": "success", "text": text})
-        elif output_format == '.pdf':
-            print("Returning PDF response")
+        if output_format == '.pdf':
             pdf_bytes = io.BytesIO()
             doc = fitz.open()
             page = doc.new_page()
@@ -73,22 +160,23 @@ async def upload_ocr_file(
             doc.save(pdf_bytes)
             doc.close()
             pdf_bytes.seek(0)
-            return JSONResponse(content={"status": "success", "message": "PDF created"})
+            if pdf_bytes.getbuffer().nbytes == 0:
+                logger.error("Generated PDF is empty")
+                raise HTTPException(status_code=500, detail="Generated PDF is empty")
+            return StreamingResponse(pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=ocr_result.pdf"})
         elif output_format == '.docx':
-            print("Returning DOCX response")
             doc = Document()
             doc.add_paragraph(text)
             file_stream = io.BytesIO()
             doc.save(file_stream)
             file_stream.seek(0)
-            return JSONResponse(content={"status": "success", "message": "DOCX created"})
+            return StreamingResponse(file_stream, media_type="application/vnd.openxmlformats-officedocument.wordprocessingml.document", headers={"Content-Disposition": "attachment; filename=ocr_result.docx"})
         else:
             raise HTTPException(status_code=400, detail="Unsupported output format")
-    
     except Exception as e:
-        print(f"Error processing file: {e}")
-        return JSONResponse(status_code=500, content={"status": "error", "message": f"Internal server error: {e}"})
-     
+        logger.error(f"Error converting text: {e}")
+        raise HTTPException(status_code=500, detail=f"Internal server error: {e}")
+
 @router.get("/get-ocr-json/")
 async def get_ocr_json(file: UploadFile = File(...)):
     try:
@@ -125,7 +213,10 @@ async def get_ocr_pdf(file: UploadFile = File(...)):
             doc.save(pdf_bytes)
             doc.close()
             pdf_bytes.seek(0)
-            return StreamingResponse(pdf_bytes, media_type="application/pdf")
+            if pdf_bytes.getbuffer().nbytes == 0:
+                logger.error("Generated PDF is empty")
+                raise HTTPException(status_code=500, detail="Generated PDF is empty")
+            return StreamingResponse(pdf_bytes, media_type="application/pdf", headers={"Content-Disposition": "attachment; filename=ocr_result.pdf"})
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type for OCR")
     except Exception as e:
