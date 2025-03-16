@@ -3,10 +3,7 @@ from fastapi.responses import JSONResponse
 from app.services.task_manager import add_task, remove_task, is_task_cancelled, cancel_task
 import filetype
 from app.services.ocr import read_image
-import fitz  # PyMuPDF
-import io
 import logging
-from docx import Document
 from collections import deque
 
 router = APIRouter()
@@ -52,27 +49,9 @@ async def upload_ocr_file(
         else:
             raise HTTPException(status_code=400, detail="Unsupported file type for OCR")
 
-        # Generate PDF
-        pdf_bytes = io.BytesIO()
-        doc = fitz.open()
-        page = doc.new_page()
-        page.insert_text((100, 100), text)
-        doc.save(pdf_bytes)
-        doc.close()
-        pdf_bytes.seek(0)
-
-        # Generate DOCX
-        doc = Document()
-        doc.add_paragraph(text)
-        docx_bytes = io.BytesIO()
-        doc.save(docx_bytes)
-        docx_bytes.seek(0)
-
         result = {
             "status": "success",
             "text": text,
-            "pdf": pdf_bytes.getvalue().decode('latin1'),  # Encode as latin1 for JSON compatibility
-            "docx": docx_bytes.getvalue().decode('latin1'),  # Encode as latin1 for JSON compatibility
             "request_id": request_id
         }
 

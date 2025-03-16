@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import api from "../../api/axios";
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -22,8 +22,6 @@ export default function OCRPage() {
   const [file, setFile] = useState<File | null>(null);
   const [ocrService, setOcrService] = useState<string>('EasyOCR');
   const [ocrResult, setOcrResult] = useState<string>('');
-  const [pdfData, setPdfData] = useState<string>('');
-  const [docxData, setDocxData] = useState<string>('');
   const [currentStep, setCurrentStep] = useState<number>(0);
   const [history, setHistory] = useState<RequestHistory[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -61,11 +59,17 @@ export default function OCRPage() {
         if (response.ok) {
           const data = await response.json();
           if (data.status === 'cancelled') {
-            setError('OCR request was cancelled.');
+            setError('Запрос OCR был отменен');
+            setCurrentStep(0); // Move to StepOne
+            setError('Запрос OCR был отменен');
+          setCurrentStep(0); // Move to StepOne
+          setRequestId(null); // Reset the request ID
+          setError(null); // Clear error
+          setOcrResult(''); // Clear the result
+          setFile(null); // Clear the file
+          setOcrService('EasyOCR'); // Reset the OCR service to default
           } else if (data.status === 'success' && data.request_id === requestId) {
             setOcrResult(data.text || 'Результат OCR пуст.');
-            setPdfData(data.pdf);
-            setDocxData(data.docx);
             setHistory([
               ...history,
               { fileName: file.name, ocrService, result: `Extracted text from ${file.name}` }
@@ -85,7 +89,13 @@ export default function OCRPage() {
       } catch (error: any) {
         if (error.name === 'AbortError') {
           console.log('OCR request was aborted.');
-          setError('OCR request was cancelled.');
+          setError('Запрос OCR был отменен');
+          setCurrentStep(0); // Move to StepOne
+          setRequestId(null); // Reset the request ID
+          setError(null); // Clear error
+          setOcrResult(''); // Clear the result
+          setFile(null); // Clear the file
+          setOcrService('EasyOCR'); // Reset the OCR service to default
         } else {
           setError('Произошла ошибка при извлечении текста. Попробуйте еще раз.');
         }
@@ -126,12 +136,7 @@ export default function OCRPage() {
   
         if (response.ok) {
           // Handle successful cancel
-          setRequestId(null); // Reset the request ID
-          setCurrentStep(0); // Go back to Step 0
-          setError(null); // Clear error
-          setOcrResult(''); // Clear the result
-          setFile(null); // Clear the file
-          setOcrService('EasyOCR'); // Reset the OCR service to default
+          
         } else {
           setError('Ошибка при отмене запроса. Попробуйте еще раз.');
         }
@@ -146,24 +151,6 @@ export default function OCRPage() {
     const fileBlob = new Blob([ocrResult], { type: 'text/plain' });
     element.href = URL.createObjectURL(fileBlob);
     element.download = "ocr_result.txt";
-    document.body.appendChild(element);
-    element.click();
-  };
-
-  const handleDownloadPdf = () => {
-    const element = document.createElement("a");
-    const fileBlob = new Blob([pdfData], { type: 'application/pdf' });
-    element.href = URL.createObjectURL(fileBlob);
-    element.download = "ocr_result.pdf";
-    document.body.appendChild(element);
-    element.click();
-  };
-
-  const handleDownloadDocx = () => {
-    const element = document.createElement("a");
-    const fileBlob = new Blob([docxData], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
-    element.href = URL.createObjectURL(fileBlob);
-    element.download = "ocr_result.docx";
     document.body.appendChild(element);
     element.click();
   };
@@ -195,8 +182,6 @@ export default function OCRPage() {
           <StepThree
             ocrResult={ocrResult}
             handleDownloadText={handleDownloadText}
-            handleDownloadPdf={handleDownloadPdf}
-            handleDownloadDocx={handleDownloadDocx}
             setCurrentStep={setCurrentStep}
           />
         );
@@ -215,8 +200,8 @@ export default function OCRPage() {
       <ComponentCard title="OCR">
         <div className="max-w-5xl mx-auto dark:text-white">
           <Stepper activeStep={currentStep} alternativeLabel>
-            {steps.map((label, index) => (
-              <Step key={label} onClick={() => setCurrentStep(index)}>
+            {steps.map((label) => (
+              <Step key={label}>
                 <StepLabel 
                   sx={{ 
                     '& .MuiStepLabel-label': { 

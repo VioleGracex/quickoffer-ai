@@ -38,15 +38,15 @@ def read_image_with_easyocr(file: UploadFile, request_id: str):
 
         # Check if task was cancelled before starting OCR
         if is_task_cancelled(request_id):
-            return "OCR request was cancelled"
+            return "Запрос OCR был отменен"
 
-        result = easyocr_reader.readtext(image_bytes)
+        result = easyocr_reader.readtext(image_bytes, detail=0, paragraph=True)
 
         text_list = []
-        for _, text, _ in result:
+        for text in result:
             # Periodically check for cancellation during processing
             if is_task_cancelled(request_id):
-                return "OCR request was cancelled"
+                return "Запрос OCR был отменен"
             text_list.append(text)
 
         return "\n".join(text_list)
