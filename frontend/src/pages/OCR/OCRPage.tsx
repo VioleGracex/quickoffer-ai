@@ -112,6 +112,9 @@ export default function OCRPage() {
           method: 'POST',
           body: formData,
         });
+        setRequestId(null);
+          setCurrentStep(0);
+          setError(null);
         if (response.ok) {
           setRequestId(null);
           setCurrentStep(0);

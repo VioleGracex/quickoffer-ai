@@ -28,6 +28,7 @@ export default function SignUpForm() {
   const [emailError, setEmailError] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
   const [confirmPasswordError, setConfirmPasswordError] = useState<string | null>(null);
+  const [serverError, setServerError] = useState<string | null>(null); // Declare serverError state
   const { signUp, loading, error } = useAuth();
   const navigate = useNavigate();
 
@@ -78,7 +79,11 @@ export default function SignUpForm() {
       await signUp({ email, password, first_name: fname, last_name: lname });
       navigate("/signin");
     } catch (err) {
-      console.error("Error during sign-up:", err);
+      if (err.message === "Сервер недоступен. Пожалуйста, попробуйте позже.") {
+        setServerError("Сервер недоступен. Пожалуйста, попробуйте позже.");
+      } else {
+        console.error("Error during sign-up:", err);
+      }
     }
   };
 
@@ -283,6 +288,7 @@ export default function SignUpForm() {
               </div>
             </form>
             {error && <p className="mt-2 text-sm text-red-600">{error}</p>}
+            {serverError && <p className="mt-2 text-sm text-red-600">{serverError}</p>}
             <div className="mt-5">
               <p className="text-sm font-normal text-center text-gray-700 dark:text-gray-400 sm:text-start">
                 Уже есть аккаунт? {""}
