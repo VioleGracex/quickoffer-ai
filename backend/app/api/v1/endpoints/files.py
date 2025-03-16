@@ -5,6 +5,7 @@ import filetype
 from app.services.ocr import read_image
 import logging
 from collections import deque
+import asyncio
 
 router = APIRouter()
 
@@ -22,11 +23,11 @@ async def upload_ocr_file(
     ocr_service: str = Form(...),
     request_id: str = Form(...)
 ):
-    print(f"Received file: {file.filename}, OCR service: {ocr_service}, Request ID: {request_id}")
+    logger.info(f"Received file: {file.filename}, OCR service: {ocr_service}, Request ID: {request_id}")
 
     # Check if the queue is full
     if len(ocr_queue) >= QUEUE_LIMIT:
-        return JSONResponse(content={"status": "busy", "message": "Сервер занят. Пожалуйста, попробуйте позже.", "request_id": request_id})
+        return JSONResponse(content={"status": "busy", "message": "Server is busy. Please try again later.", "request_id": request_id})
 
     # Add the request to the queue and mark it as ongoing
     ocr_queue.append(request_id)
@@ -36,29 +37,27 @@ async def upload_ocr_file(
         kind = filetype.guess(file.file)
         file.file.seek(0)  # Reset file pointer after detection
 
-        if not kind:
+        if not kind or not kind.mime.startswith('image/'):
             raise HTTPException(status_code=400, detail="Unsupported file type")
 
-        print(f"Detected file type: {kind.mime}")
+        logger.info(f"Detected file type: {kind.mime}")
 
-        if kind.mime.startswith('image/'):
-            text = read_image(file, ocr_service, request_id)  # Pass the request_id to track cancellation
-            if is_task_cancelled(request_id):
-                return JSONResponse(content={"status": "cancelled", "message": "This OCR request has been cancelled", "request_id": request_id})
-            print(f"OCR result: {text}")
-        else:
-            raise HTTPException(status_code=400, detail="Unsupported file type for OCR")
+        result = await read_image(file, ocr_service, request_id)  # Pass the request_id to track cancellation
+        if is_task_cancelled(request_id):
+            return JSONResponse(content={"status": "cancelled", "message": "This OCR request has been cancelled", "request_id": request_id})
+        result_text = "\n".join(result)
+        logger.info(f"OCR result: {result_text}")
 
         result = {
             "status": "success",
-            "text": text,
+            "text": result_text,
             "request_id": request_id
         }
 
         return JSONResponse(content=result)
 
     except Exception as e:
-        print(f"Error processing file: {e}")
+        logger.error(f"Error processing file: {e}")
         return JSONResponse(status_code=500, content={"status": "error", "message": f"Internal server error: {e}", "request_id": request_id})
     finally:
         # Remove the request from the queue and clean up ongoing task
@@ -68,7 +67,7 @@ async def upload_ocr_file(
 
 @router.post("/cancel-ocr/")
 async def cancel_ocr_request(request_id: str = Form(...)):
-    print(f"Canceling OCR request with ID: {request_id}")
+    logger.info(f"Canceling OCR request with ID: {request_id}")
     if is_task_cancelled(request_id):  # Check if the task is already cancelled
         return JSONResponse(content={"status": "error", "message": "OCR request not found or already cancelled", "request_id": request_id})
     

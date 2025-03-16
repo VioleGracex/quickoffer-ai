@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from "react";
+import React, { useEffect, useCallback, useRef, useState } from "react";
 import { FiXCircle, FiRefreshCw } from "react-icons/fi";
 import { Button, IconButton, CircularProgress } from '@mui/material';
 
@@ -7,10 +7,18 @@ interface StepTwoProps {
   handleExtractText: (abortController: AbortController) => Promise<void>;
   handleCancel: () => void;
   error: string | null;
+  handleRetry: () => void; // Add handleRetry as a prop
+  loading: boolean; // Add loading as a prop
 }
 
-const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel, error }) => {
-  const [loading, setLoading] = useState<boolean>(false);
+const StepTwo: React.FC<StepTwoProps> = ({
+  file,
+  handleExtractText,
+  handleCancel,
+  error,
+  handleRetry,
+  loading, // Use loading prop
+}) => {
   const [abortController, setAbortController] = useState<AbortController | null>(null);
   const [retrying, setRetrying] = useState<boolean>(false);
   const previousFileRef = useRef<File | null>(null); // Reference to store the previous file
@@ -21,7 +29,6 @@ const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel
 
     if (previousFileRef.current && previousFileRef.current !== file) {
       // If the file has changed, reset the state
-      setLoading(false);
       setRetrying(false);
     }
 
@@ -29,14 +36,11 @@ const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel
 
     const newAbortController = new AbortController();
     setAbortController(newAbortController);
-    setLoading(true);
 
     handleExtractText(newAbortController)
       .catch((err) => console.error("OCR extraction failed:", err))
       .finally(() => {
-        setLoading(false);
         setRetrying(false); // Reset retry flag after one retry attempt
-        console.log("cancel");
       });
   }, [file, handleExtractText]);
 
@@ -49,7 +53,7 @@ const StepTwo: React.FC<StepTwoProps> = ({ file, handleExtractText, handleCancel
   const handleRetryClick = () => {
     if (!retrying) {
       setRetrying(true);
-      extractText();
+      handleRetry(); // Call handleRetry passed from the parent component
     }
   };
 

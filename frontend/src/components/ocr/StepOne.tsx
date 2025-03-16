@@ -9,7 +9,7 @@ interface StepOneProps {
   handleDeleteFile: () => void;
   ocrService: string;
   handleOcrServiceChange: (service: string) => void;
-  setCurrentStep: (step: number) => void;
+  startUpload: () => void; 
 }
 
 const ocrServices = ['EasyOCR', 'Google Vision', 'Tesseract OCR'];
@@ -21,7 +21,7 @@ const StepOne: React.FC<StepOneProps> = ({
   handleDeleteFile,
   ocrService,
   handleOcrServiceChange,
-  setCurrentStep
+  startUpload,
 }) => {
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -81,7 +81,7 @@ const StepOne: React.FC<StepOneProps> = ({
         <Button
           variant="contained"
           color="primary"
-          onClick={() => setCurrentStep(1)}
+          onClick={startUpload} 
           startIcon={<FiUploadCloud />}
           disabled={!file || !!errorMessage}
         >
