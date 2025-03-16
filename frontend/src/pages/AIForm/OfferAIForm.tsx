@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
@@ -6,6 +7,8 @@ import ClientInfoForm from '../../components/AIForm/ClientInfoForm';
 import FileUpload from '../../components/AIForm/FileUpload';
 import GeneratedText from '../../components/AIForm/GeneratedText';
 import ActionButtons from '../../components/AIForm/ActionButtons';
+import ApiModelSelector from '../../components/AIForm/ApiModelSelector';
+import ErrorMessage from '../../components/AIForm/ErrorMessage';
 import { generateProposal, savePdf, sendEmail } from '../../routes/proposal_api';
 
 interface ClientInfo {
@@ -65,16 +68,16 @@ const OfferAIForm: React.FC = () => {
 
   const handleGenerateText = async () => {
     const formData = new FormData();
-    formData.append('clientInfo', JSON.stringify(clientInfo));
-    formData.append('model', model);
-    formData.append('api', api);
+    appendFormData(formData, 'clientInfo', JSON.stringify(clientInfo));
+    appendFormData(formData, 'model', model);
+    appendFormData(formData, 'api', api);
     if (templateFile) {
-      formData.append('templateFile', templateFile);
-      formData.append('templateFileType', templateFile.type);
+      appendFormData(formData, 'templateFile', templateFile);
+      appendFormData(formData, 'templateFileType', templateFile.type);
     }
     if (productDataFile) {
-      formData.append('productDataFile', productDataFile);
-      formData.append('productDataFileType', productDataFile.type);
+      appendFormData(formData, 'productDataFile', productDataFile);
+      appendFormData(formData, 'productDataFileType', productDataFile.type);
     }
 
     try {
@@ -83,14 +86,14 @@ const OfferAIForm: React.FC = () => {
       setError('');
     } catch (error) {
       console.error('Ошибка при генерации текста предложения:', error);
-      setError('Ошибка при генерации текста предложения: ' + error.response.data.detail);
+      setError('Ошибка при генерации текста предложения: ' + error);
     }
   };
 
   const handleSavePdf = async () => {
     const formData = new FormData();
-    if (templateFile) formData.append('templateFile', templateFile);
-    formData.append('generatedText', generatedText);
+    if (templateFile) appendFormData(formData, 'templateFile', templateFile);
+    appendFormData(formData, 'generatedText', generatedText);
 
     try {
       const data = await savePdf(formData);
@@ -98,7 +101,7 @@ const OfferAIForm: React.FC = () => {
       setError('');
     } catch (error) {
       console.error('Ошибка при сохранении PDF:', error);
-      setError('Ошибка при сохранении PDF: ' + error.response.data.detail);
+      setError('Ошибка при сохранении PDF: ' + error);
     }
   };
 
@@ -114,7 +117,7 @@ const OfferAIForm: React.FC = () => {
       setError('');
     } catch (error) {
       console.error('Ошибка при отправке Email:', error);
-      setError('Ошибка при отправке Email: ' + error.response.data.detail);
+      setError('Ошибка при отправке Email: ' + error);
     }
   };
 
@@ -137,24 +140,8 @@ const OfferAIForm: React.FC = () => {
       quantity: '100',
     });
   };
-
-  const getModelOptions = () => {
-    if (api === 'openai') {
-      return (
-        <>
-          <option value="gpt-4">GPT-4</option>
-          <option value="gpt-4-turbo">GPT-4 Turbo</option>
-          <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-        </>
-      );
-    } else if (api === 'deepseek') {
-      return (
-        <>
-          <option value="deepseek-chat">DeepSeek Chat</option>
-          <option value="deepseek-chat-mini">DeepSeek Chat Mini</option>
-        </>
-      );
-    }
+  const appendFormData = (formData: FormData, key: string, value: any) => {
+    formData.append(key, value);
   };
 
   return (
@@ -164,21 +151,9 @@ const OfferAIForm: React.FC = () => {
       <ComponentCard title="Создать КП">
         <div className="max-w-5xl mx-auto dark:text-white p-6">
           <ClientInfoForm clientInfo={clientInfo} handleInputChange={handleInputChange} fillTestData={fillTestData} />
-          <div className="mb-4 mt-6">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Выберите API</label>
-            <select value={api} onChange={handleApiChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-              <option value="openai">OpenAI</option>
-              <option value="deepseek">DeepSeek</option>
-            </select>
-          </div>
-          <div className="mb-4">
-            <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Выберите модель</label>
-            <select value={model} onChange={handleModelChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
-              {getModelOptions()}
-            </select>
-          </div>
+          <ApiModelSelector api={api} model={model} handleApiChange={handleApiChange} handleModelChange={handleModelChange} />
           <FileUpload setTemplateFile={setTemplateFile} setProductDataFile={setProductDataFile} templateFile={templateFile} productDataFile={productDataFile} />
-          {error && <div className="bg-red-500 text-white p-4 mb-6 rounded">{error}</div>}
+          <ErrorMessage error={error} />
           <GeneratedText generatedText={generatedText} setGeneratedText={setGeneratedText} />
           <ActionButtons
             templateFile={templateFile}
