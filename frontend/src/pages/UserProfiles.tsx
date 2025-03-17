@@ -1,7 +1,7 @@
 import PageBreadcrumb from "../components/common/PageBreadCrumb";
 import UserMetaCard from "../components/UserProfile/UserMetaCard";
 import UserInfoCard from "../components/UserProfile/UserInfoCard";
-import useAuth from "../routes/useAuth";
+import useAuth from "../routes/auth_api";
 import { useEffect, useState } from "react";
 import PageMeta from "../components/common/PageMeta";
 

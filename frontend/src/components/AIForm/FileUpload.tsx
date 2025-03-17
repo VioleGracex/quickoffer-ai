@@ -73,7 +73,7 @@ const FileUpload: React.FC<FileUploadProps> = ({ setTemplateFile, setProductData
             <div className="text-center">
               <FaFileAlt className="text-3xl mx-auto mb-2 text-gray-500 dark:text-gray-300" />
               <p className="text-gray-500 dark:text-gray-300">Перетащите данные о продуктах сюда или нажмите, чтобы выбрать файл</p>
-              <p className="text-xs text-gray-500 dark:text-gray-300">Допустимые типы файлов: csv, excel, txt, docx, pdf</p>
+              <p className="text-xs  text-gray-500 dark:text-gray-300">Допустимые типы файлов: csv, excel, txt, docx, pdf</p>
             </div>
           </div>
           {productDataFile && (

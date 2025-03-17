@@ -4,7 +4,7 @@ import { Dropdown } from "../ui/dropdown/Dropdown";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUser, faCog, faQuestionCircle, faSignOutAlt, faChevronDown } from "@fortawesome/free-solid-svg-icons";
-import useAuth from "../../routes/useAuth";
+import useAuth from "../../routes/auth_api";
 
 const dropdownItems = [
   {

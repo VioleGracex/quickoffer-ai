@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Navigate, Outlet } from 'react-router-dom';
 import {jwtDecode} from 'jwt-decode';
-import useAuth from '../routes/useAuth';
+import useAuth from '../routes/auth_api';
 
 const PrivateRoute: React.FC = () => {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);

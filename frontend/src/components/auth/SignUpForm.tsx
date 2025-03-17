@@ -11,7 +11,7 @@ import Label from "../form/Label";
 import Input from "../form/input/InputField";
 import Checkbox from "../form/input/Checkbox";
 import Button from "../ui/button/Button";
-import useAuth from "../../routes/useAuth";
+import useAuth from "../../routes/auth_api";
 import { validateEmail, validateSignUpPassword } from "../../utils/validationUtils";
 
 export default function SignUpForm() {

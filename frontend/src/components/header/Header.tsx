@@ -3,7 +3,7 @@ import { ThemeToggleButton } from "../common/ThemeToggleButton";
 import NotificationDropdown from "./NotificationDropdown";
 import UserDropdown from "./UserDropdown";
 import { Link } from "react-router-dom"; // Убедитесь, что импортируете из 'react-router-dom'
-import useAuth from "../../routes/useAuth";
+import useAuth from "../../routes/auth_api";
 
 interface HeaderProps {
   onClick?: () => void;
