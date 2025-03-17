@@ -3,6 +3,7 @@ import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
 import { useState, useEffect } from "react";
+import { validateEmail } from "../../utils/validationUtils";
 
 interface EditModalProps {
   isOpen: boolean;
@@ -13,6 +14,14 @@ interface EditModalProps {
 
 const EditModal = ({ isOpen, onClose, user, updateUser }: EditModalProps) => {
   const [formData, setFormData] = useState({
+    first_name: "",
+    last_name: "",
+    email: "",
+    phone: "",
+    bio: "",
+  });
+
+  const [errors, setErrors] = useState({
     first_name: "",
     last_name: "",
     email: "",
@@ -37,7 +46,22 @@ const EditModal = ({ isOpen, onClose, user, updateUser }: EditModalProps) => {
     setFormData({ ...formData, [name]: value });
   };
 
+
   const handleSave = async () => {
+    const newErrors = {
+      first_name: formData.first_name ? "" : "Имя не может быть пустым",
+      last_name: formData.last_name ? "" : "Фамилия не может быть пустой",
+      email: formData.email ? (validateEmail(formData.email) ? "" : "Неверный формат электронной почты") : "Электронная почта не может быть пустой",
+      phone: "",
+      bio: "",
+    };
+
+    setErrors(newErrors);
+
+    if (Object.values(newErrors).some(error => error)) {
+      return;
+    }
+
     if (user && user.id) {
       try {
         await updateUser(user.id, formData);
@@ -78,6 +102,7 @@ const EditModal = ({ isOpen, onClose, user, updateUser }: EditModalProps) => {
                     value={formData.first_name}
                     onChange={handleChange}
                   />
+                  {errors.first_name && <p className="text-red-500 text-sm">{errors.first_name}</p>}
                 </div>
 
                 <div className="col-span-2 lg:col-span-1">
@@ -88,6 +113,7 @@ const EditModal = ({ isOpen, onClose, user, updateUser }: EditModalProps) => {
                     value={formData.last_name}
                     onChange={handleChange}
                   />
+                  {errors.last_name && <p className="text-red-500 text-sm">{errors.last_name}</p>}
                 </div>
 
                 <div className="col-span-2 lg:col-span-1">
@@ -98,6 +124,7 @@ const EditModal = ({ isOpen, onClose, user, updateUser }: EditModalProps) => {
                     value={formData.email}
                     onChange={handleChange}
                   />
+                  {errors.email && <p className="text-red-500 text-sm">{errors.email}</p>}
                 </div>
 
                 <div className="col-span-2 lg:col-span-1">
