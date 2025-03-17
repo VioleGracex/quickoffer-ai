@@ -1,15 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
+import React from 'react';
+import { Route, Navigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 
-const PublicRoute: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+const PublicRoute = ({ element: Component, ...rest }: any) => {
+  const { isAuthenticated } = useAuth0();
 
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated') === 'true';
-    setIsAuthenticated(authStatus);
-  }, []); // Empty dependency array ensures this runs only once on mount
-
-  return !isAuthenticated ? <Outlet /> : <Navigate to="/main-dashboard" />;
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        !isAuthenticated ? (
+          <Component {...props} />
+        ) : (
+          <Navigate to="/main-dashboard" />
+        )
+      }
+    />
+  );
 };
 
 export default PublicRoute;

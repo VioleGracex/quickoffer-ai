@@ -1,39 +1,22 @@
-import React, { useState, useEffect } from 'react';
-import { Navigate, Outlet } from 'react-router-dom';
-import {jwtDecode} from 'jwt-decode';
-import useAuth from '../routes/auth_api';
+import React from 'react';
+import { Route, Navigate } from 'react-router-dom';
+import { useAuth0 } from '@auth0/auth0-react';
 
-const PrivateRoute: React.FC = () => {
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean | null>(null);
-  const { signOut } = useAuth();
+const PrivateRoute = ({ element: Component, ...rest }: any) => {
+  const { isAuthenticated } = useAuth0();
 
-  useEffect(() => {
-    const token = localStorage.getItem('token');
-    if (token) {
-      const tokenValidity = isTokenValid(token);
-      setIsAuthenticated(tokenValidity);
-    } else {
-      setIsAuthenticated(false);
-      signOut();
-    }
-  }, []);
-
-  if (isAuthenticated === null) {
-    // Render a loading state while authentication is being checked
-    return <div>Loading...</div>;
-  }
-
-  return isAuthenticated ? <Outlet /> : <Navigate to="/signin" />;
-};
-
-const isTokenValid = (token: string): boolean => {
-  try {
-    const decodedToken: { exp: number } = jwtDecode(token);
-    const currentTime = Math.floor(Date.now() / 1000);
-    return decodedToken.exp > currentTime;
-  } catch (error) {
-    return false;
-  }
+  return (
+    <Route
+      {...rest}
+      render={(props) =>
+        isAuthenticated ? (
+          <Component {...props} />
+        ) : (
+          <Navigate to="/signin" />
+        )
+      }
+    />
+  );
 };
 
 export default PrivateRoute;
