@@ -6,11 +6,9 @@ from app.core.config import settings
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-# Set the OpenAI API key from settings
-openai.api_key = settings.OPENAI_API_KEY
-
 async def generate_proposal_text(client_info, template_text, product_data_text, selected_products, model="gpt-4-turbo", api="openai"):
-    # Construct the educational prompt in Russian with a persona
+    """Генерация текста коммерческого предложения с OpenAI или DeepSeek."""
+
     prompt = f"""
     Персона:
     Имя: Менеджер по продажам
@@ -40,35 +38,40 @@ async def generate_proposal_text(client_info, template_text, product_data_text, 
     Начните текст предложения ниже:
     """
 
-    # Log and print when generation is started
-    logger.info("Starting proposal text generation.")
-    print("Starting proposal text generation.")
+    logger.info("📌 Начало генерации коммерческого предложения.")
+    logger.debug(f"📄 Сгенерированный prompt:\n{prompt}")
 
-    # Log the prompt
-    logger.info(f"Generated prompt: {prompt}")
-    print(f"Generated prompt: {prompt}")
+    try:
+        if api == "openai":
+            client = openai.OpenAI(api_key=settings.OPENAI_API_KEY)
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
+                    {"role": "user", "content": prompt},
+                ],
+                max_tokens=500,
+                stop=["==="]
+            )
+        elif api == "deepseek":
+            client = openai.OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com/v1")
+            response = client.chat.completions.create(
+                model=model,
+                messages=[
+                    {"role": "system", "content": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
+                    {"role": "user", "content": prompt},
+                ],
+                stream=False
+            )
+        else:
+            raise ValueError("❌ Неподдерживаемый API: используйте 'openai' или 'deepseek'.")
 
-    if api == "openai":
-        response = openai.ChatCompletion.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
-                {"role": "user", "content": prompt},
-            ],
-            max_tokens=500,
-            stop=["==="]
-        )
-    elif api == "deepseek":
-        deepseek_client = openai.OpenAI(api_key=settings.DEEPSEEK_API_KEY, base_url="https://api.deepseek.com")
-        response = deepseek_client.chat.completions.create(
-            model=model,
-            messages=[
-                {"role": "system", "content": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
-                {"role": "user", "content": prompt},
-            ],
-            stream=False
-        )
-    else:
-        raise ValueError("Unsupported API provider")
+        return response.choices[0].message.content.strip()
 
-    return response.choices[0].message.content.strip() if api == "deepseek" else response.choices[0].message.content.strip()
+    except openai.OpenAIError as e:
+        logger.error(f"⚠ Ошибка при генерации текста: {str(e)}")
+        raise RuntimeError(f"Ошибка генерации: {str(e)}")
+
+    except Exception as e:
+        logger.error(f"❌ Непредвиденная ошибка: {str(e)}")
+        raise RuntimeError(f"Ошибка генерации текста: {str(e)}")
