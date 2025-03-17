@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
+import { v4 as uuidv4 } from 'uuid'; // Add this import
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
@@ -71,6 +72,7 @@ const OfferAIForm: React.FC = () => {
     appendFormData(formData, 'clientInfo', JSON.stringify(clientInfo));
     appendFormData(formData, 'model', model);
     appendFormData(formData, 'api', api);
+    appendFormData(formData, 'requestId', uuidv4()); // Add unique request ID
     if (templateFile) {
       appendFormData(formData, 'templateFile', templateFile);
       appendFormData(formData, 'templateFileType', templateFile.type);

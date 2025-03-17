@@ -12,14 +12,19 @@ async def save_file_to_tmp(file) -> str:
     """
     Save the uploaded file to a temporary file and return its path.
     """
-    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=".docx")
+    suffix = os.path.splitext(file.filename)[1]  # Get the file extension
+    temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
     file_path = temp_file.name  # Get the full path of the temporary file
     
     # Save file content
     async with aiofiles.open(file_path, 'wb') as out_file:
         content = await file.read()
         await out_file.write(content)
-
+    
+    # Log the file path and size
+    file_size = os.stat(file_path).st_size
+    logger.info(f"File saved to {file_path}, size: {file_size} bytes")
+    
     return file_path
 
 async def read_file_with_fallback(file_path: str, encodings: list) -> str:
@@ -35,11 +40,10 @@ async def read_file_with_fallback(file_path: str, encodings: list) -> str:
             continue
     return ""
 
-async def read_csv(file) -> str:
+async def read_csv(file_path: str) -> str:
     """
     Read a CSV file and return its contents as a string.
     """
-    file_path = await save_file_to_tmp(file)
     file_size = os.stat(file_path).st_size
     logger.info(f"CSV file size: {file_size} bytes")
     
@@ -59,11 +63,10 @@ async def read_csv(file) -> str:
         return ""
     return df.to_string()
 
-async def read_pdf(file) -> str:
+async def read_pdf(file_path: str) -> str:
     """
     Read a PDF file and return its extracted text.
     """
-    file_path = await save_file_to_tmp(file)
     try:
         with open(file_path, 'rb') as file:
             reader = PyPDF2.PdfReader(file)
@@ -75,11 +78,10 @@ async def read_pdf(file) -> str:
         logger.warning(f"Error reading PDF file: {str(e)}")
         return ""
 
-async def read_docx(file) -> str:
+async def read_docx(file_path: str) -> str:
     """
     Read a DOCX file and return its extracted text.
     """
-    file_path = await save_file_to_tmp(file)
     try:
         doc = docx.Document(file_path)
         text = ""

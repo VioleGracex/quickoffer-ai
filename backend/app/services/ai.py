@@ -38,6 +38,10 @@ async def generate_proposal_text(client_info, template_text, product_data_text, 
     logger.info("Starting proposal text generation.")
     print("Starting proposal text generation.")
 
+    # Log the prompt
+    logger.info(f"Generated prompt: {prompt}")
+    print(f"Generated prompt: {prompt}")
+
     if api == "openai":
         response = openai.ChatCompletion.create(
             model=model,

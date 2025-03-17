@@ -8,6 +8,7 @@ from app.services.email import send_email
 from app.services.ocr import read_image, read_pdf, read_excel
 from app.services.file_services import save_file_to_tmp, read_file_with_fallback, read_csv, read_docx
 import logging
+import os
 
 router = APIRouter()
 
@@ -38,7 +39,8 @@ async def generate_proposal(
     templateFileType: str = Form(...),
     productDataFileType: str = Form(...),
     model: str = Form(...),
-    api: str = Form(...)
+    api: str = Form(...),
+    requestId: str = Form(...)  # Add requestId here
 ):
     try:
         # Extract all form data dynamically
@@ -56,28 +58,34 @@ async def generate_proposal(
     template_file_path = await save_file_to_tmp(templateFile)
     product_data_file_path = await save_file_to_tmp(productDataFile)
 
+    # Ensure the temporary file paths are valid
+    if not os.path.isfile(template_file_path):
+        raise HTTPException(status_code=400, detail="Template file upload failed.")
+    if not os.path.isfile(product_data_file_path):
+        raise HTTPException(status_code=400, detail="Product data file upload failed.")
+
     # Process uploaded files (reading the file content based on type)
     if templateFileType.startswith('image/'):
-        template_text = await read_image(templateFile, 'EasyOCR', request_id="templateFile_request")
+        template_text = await read_image(template_file_path, 'EasyOCR', request_id=f"{requestId}_templateFile")
     elif templateFileType == 'application/pdf':
-        template_text = await read_pdf(templateFile)
+        template_text = await read_pdf(template_file_path)
     elif templateFileType in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']:
-        template_text = await read_excel(templateFile)
+        template_text = await read_excel(template_file_path)
     elif templateFileType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        template_text = await read_docx(templateFile)
+        template_text = await read_docx(template_file_path)
     else:
         template_text = await read_file_with_fallback(template_file_path, ['utf-8', 'windows-1251'])
 
     if productDataFileType.startswith('image/'):
-        product_data_text = await read_image(productDataFile, 'EasyOCR', request_id="productDataFile_request")
+        product_data_text = await read_image(product_data_file_path, 'EasyOCR', request_id=f"{requestId}_productDataFile")
     elif productDataFileType == 'application/pdf':
-        product_data_text = await read_pdf(productDataFile)
+        product_data_text = await read_pdf(product_data_file_path)
     elif productDataFileType in ['application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'application/vnd.ms-excel']:
-        product_data_text = await read_excel(productDataFile)
+        product_data_text = await read_excel(product_data_file_path)
     elif productDataFileType == 'text/csv':
-        product_data_text = await read_csv(productDataFile)
+        product_data_text = await read_csv(product_data_file_path)
     elif productDataFileType == 'application/vnd.openxmlformats-officedocument.wordprocessingml.document':
-        product_data_text = await read_docx(productDataFile)
+        product_data_text = await read_docx(product_data_file_path)
     else:
         product_data_text = await read_file_with_fallback(product_data_file_path, ['utf-8', 'windows-1251'])
 
