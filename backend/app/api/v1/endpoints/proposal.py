@@ -51,6 +51,9 @@ async def generate_proposal(
         client_info = json.loads(form_dict.get("clientInfo", "{}"))
         selected_products = json.loads(form_dict.get("selectedProducts", "[]"))
 
+        # Log the extracted client info
+        logger.info(f"Extracted client info: {client_info}")
+
     except json.JSONDecodeError:
         raise HTTPException(status_code=400, detail="Неверный формат JSON")
 

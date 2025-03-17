@@ -13,11 +13,17 @@ async def generate_proposal_text(client_info, template_text, product_data_text, 
     # Construct the educational prompt in Russian with a persona
     prompt = f"""
     Персона:
-    Имя: {client_info.get('name', '')}
-    Компания: {client_info.get('company', '')}
+    Имя: Менеджер по продажам
+    Компания: {client_info.get('companyName', '')}
+    Юридический адрес: {client_info.get('legalAddress', '')}
     ИНН: {client_info.get('inn', '')}
-    Скидка: {client_info.get('discount', '')}
-    Описание: {client_info.get('description', '')}
+    Расчетный счет: {client_info.get('bankAccount', '')}
+    Название банка: {client_info.get('bankName', '')}
+    Название клиента: {client_info.get('clientName', '')}
+    Контактное лицо: {client_info.get('contactPerson', '')}
+    Название продукта: {client_info.get('productName', '')}
+    Тариф: {client_info.get('pricingPlan', '')}
+    Количество лицензий: {client_info.get('quantity', '')}
     
     Текст шаблона: {template_text}
     Данные о продуктах: {product_data_text}
