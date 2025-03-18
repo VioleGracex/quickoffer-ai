@@ -6,11 +6,13 @@ import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
 import FileUpload from '../../components/AIForm/FileUpload';
 import GeneratedText from '../../components/AIForm/GeneratedText';
-import ActionButtons from '../../components/AIForm/ActionButtons';
 import ApiModelSelector from '../../components/AIForm/ApiModelSelector';
 import ErrorMessage from '../../components/AIForm/ErrorMessage';
 import { generateProposal, savePdf, sendEmail } from '../../routes/proposal_api';
 import PDFViewer from '../PDFViewer'; // Import the custom PDF Viewer component
+import { Button } from '@mui/material';
+import { FiUploadCloud, FiFileText } from 'react-icons/fi';
+import { FaFilePdf, FaFileWord, FaDownload } from 'react-icons/fa';
 
 const OfferAIForm: React.FC = () => {
   const [templateFile, setTemplateFile] = useState<File | null>(null);
@@ -93,6 +95,18 @@ const OfferAIForm: React.FC = () => {
     }
   };
 
+  const handleDownloadText = () => {
+    // Implement download text functionality
+  };
+
+  const handleDownloadPdf = () => {
+    // Implement download PDF functionality
+  };
+
+  const handleDownloadDocx = () => {
+    // Implement download DOCX functionality
+  };
+
   const isFormValid = () => {
     return templateFile !== null && productDataFile !== null;
   };
@@ -101,64 +115,110 @@ const OfferAIForm: React.FC = () => {
     formData.append(key, value);
   };
 
-  return (
-    <div className="dark:bg-gray-900 dark:text-white min-h-screen pt-8 flex">
-      {/* Left - PDF Viewer */}
-      <div className="w-3/4 p-4">
-        <PageMeta title="Создать КП" description="Генерация КП с помощью AI" />
-        <PageBreadcrumb pageTitle="Создать КП" />
-        <ComponentCard title="Создать КП">
+  const renderTabContent = () => {
+    switch (activeTab) {
+      case "Шаблон КП":
+        return (
           <div className="max-w-5xl mx-auto dark:text-white p-6">
-            <ApiModelSelector api={api} model={model} handleApiChange={handleApiChange} handleModelChange={handleModelChange} />
-            <FileUpload setTemplateFile={setTemplateFile} setProductDataFile={setProductDataFile} templateFile={templateFile} productDataFile={productDataFile} />
+            <div> <ApiModelSelector api={api} model={model} handleApiChange={handleApiChange} handleModelChange={handleModelChange} /></div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              
+            </div>
             {templateFile ? (
               <div className="mt-4 border p-2 bg-white text-black">
                 <PDFViewer file={templateFile} />
               </div>
             ) : (
-              <div className="mt-4 border p-2 bg-white text-black">
-                Пожалуйста, загрузите шаблон КП и данные о продукте.
-              </div>
+              <FileUpload setFile={setTemplateFile} file={templateFile} label="Шаблон" />
             )}
             <ErrorMessage error={error} />
             <GeneratedText generatedText={generatedText} setGeneratedText={setGeneratedText} />
-            <ActionButtons
-              templateFile={templateFile}
-              productDataFile={productDataFile}
-              generatedText={generatedText}
-              pdfLink={pdfLink}
-              handleGenerateText={handleGenerateText}
-              handleSavePdf={handleSavePdf}
-              handleSendEmail={handleSendEmail}
-              isFormValid={isFormValid()}
-            />
           </div>
+        );
+      case "Мои Товары":
+        return (
+          <div className="max-w-5xl mx-auto dark:text-white p-6">
+            {productDataFile ? (
+              <div className="mt-4 border p-2 bg-white text-black">
+                <PDFViewer file={productDataFile} />
+              </div>
+            ) : (
+              <FileUpload setFile={setProductDataFile} file={productDataFile} label="Данные о продуктах" />
+            )}
+          </div>
+        );
+      case "История":
+        return (
+          <div className="max-w-5xl mx-auto dark:text-white p-6">
+            <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-4">История запросов и файлов</h3>
+            {/* History content goes here */}
+          </div>
+        );
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div className="dark:bg-gray-900 dark:text-white min-h-screen pt-8 flex">
+      {/* Left - Main content */}
+      <div className="w-3/4 p-4">
+        <PageMeta title="Создать КП" description="Генерация КП с помощью AI" />
+        <PageBreadcrumb pageTitle="Создать КП" />
+        <ComponentCard title="Создать КП">
+          {renderTabContent()}
         </ComponentCard>
       </div>
 
       {/* Right - Sidebar */}
-      <div className="w-1/4 p-4 border-l border-gray-700">
-        <h2 className="text-xl font-bold mb-4">Sale Assist</h2>
-        <div className="flex flex-col">
-          {["Шаблон КП", "Мои Товары", "История"].map((tab) => (
-            <button
-              key={tab}
-              className={`w-full text-left py-2 px-4 ${activeTab === tab ? "bg-gray-800 text-white" : "text-gray-700"}`}
-              onClick={() => setActiveTab(tab)}
+      <div className="w-1/4 p-4 border-l border-gray-700 flex flex-col justify-between">
+        <div>
+          <h2 className="text-xl font-bold mb-4">Sale Assist</h2>
+          <div className="flex flex-col mb-4">
+            {["Шаблон КП", "Мои Товары", "История"].map((tab) => (
+              <button
+                key={tab}
+                className={`w-full text-left py-2 px-4 ${activeTab === tab ? "bg-gray-800 text-white" : "text-gray-700"}`}
+                onClick={() => setActiveTab(tab)}
+              >
+                {tab === "Шаблон КП" && "📄 "}
+                {tab === "Мои Товары" && "📦 "}
+                {tab === "История" && "⏳ "}
+                {tab}
+              </button>
+            ))}
+          </div>
+          <textarea
+            className="w-full p-2 border rounded"
+            placeholder="Дополнительная информация (необязательно)"
+            value={additionalPrompt}
+            onChange={(e) => setAdditionalPrompt(e.target.value)}
+          />
+          <div className="mt-4">
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={handleGenerateText}
+              startIcon={<FiUploadCloud />}
+              disabled={!templateFile || !productDataFile || !isFormValid()}
+              className="w-full"
+              style={{ marginBottom: '1rem', backgroundColor: (!templateFile || !productDataFile || !isFormValid()) ? 'gray' : undefined }}
             >
-              {tab === "Шаблон КП" && "📄 "}
-              {tab === "Мои Товары" && "📦 "}
-              {tab === "История" && "⏳ "}
-              {tab}
-            </button>
-          ))}
+              + Создать КП
+            </Button>
+          </div>
+          <div className="flex justify-around mt-4">
+            <Button variant="outlined" startIcon={<FiFileText />} onClick={handleDownloadText}>
+              Text
+            </Button>
+            <Button variant="outlined" startIcon={<FaFilePdf />} onClick={handleDownloadPdf}>
+              PDF
+            </Button>
+            <Button variant="outlined" startIcon={<FaFileWord />} onClick={handleDownloadDocx}>
+              Word
+            </Button>
+          </div>
         </div>
-        <textarea
-          className="w-full p-2 mt-4 border rounded"
-          placeholder="Дополнительная информация (необязательно)"
-          value={additionalPrompt}
-          onChange={(e) => setAdditionalPrompt(e.target.value)}
-        />
       </div>
     </div>
   );
