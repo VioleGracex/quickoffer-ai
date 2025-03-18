@@ -1,34 +1,34 @@
 import openai
 import logging
 from app.core.config import settings
+from yandex_cloud_ml_sdk import YCloudML
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def generate_proposal_text(client_info, template_text, product_data_text, selected_products, model="gpt-4-turbo", api="openai"):
-    """Генерация текста коммерческого предложения с OpenAI или DeepSeek."""
+async def generate_proposal_text(template_text, product_data_text, selected_products, model="deepseek-chat", api="deepseek"):
+    """Генерация текста коммерческого предложения с OpenAI, DeepSeek или Yandex GPT."""
 
     prompt = f"""
-    Персона:
-    Имя: Менеджер по продажам
-    Компания: {client_info.get('companyName', '')}
-    Юридический адрес: {client_info.get('legalAddress', '')}
-    ИНН: {client_info.get('inn', '')}
-    Расчетный счет: {client_info.get('bankAccount', '')}
-    Название банка: {client_info.get('bankName', '')}
-    Название клиента: {client_info.get('clientName', '')}
-    Контактное лицо: {client_info.get('contactPerson', '')}
-    Название продукта: {client_info.get('productName', '')}
-    Тариф: {client_info.get('pricingPlan', '')}
-    Количество лицензий: {client_info.get('quantity', '')}
-    
     Текст шаблона: {template_text}
     Данные о продуктах: {product_data_text}
     
     Выбранные продукты: {", ".join(selected_products)}
+
+    Пожалуйста, найдите и используйте следующие значения, если они присутствуют в тексте шаблона:
+    - Название компании 
+    - Юридический адрес 
+    - ИНН 
+    - Расчетный счет 
+    - Название банка 
+    - Название клиента 
+    - Контактное лицо 
+    - Название продукта 
+    - Тариф 
+    - Количество лицензий 
     
-    Пожалуйста, создайте убедительный текст предложения.
+    Пожалуйста, создайте убедительный текст предложения, используя профессиональный коммерческий русский язык, правильную грамматику и российские бизнес-термины.
     
     Учебное задание:
     Представьте, что вы готовите коммерческое предложение для клиента, который ищет лучшее предложение для своей компании. Включите в текст ключевые преимущества, уникальные предложения и возможные скидки. Текст должен быть профессиональным, лаконичным и убедительным.
@@ -63,10 +63,24 @@ async def generate_proposal_text(client_info, template_text, product_data_text, 
                 ],
                 stream=False
             )
+        elif api == "yandex":
+            sdk = YCloudML(folder_id="b1gpnbjii14cs5phf9of", auth=settings.YANDEX_API_KEY)
+            model = sdk.models.completions("yandexgpt", model_version="rc")
+            model = model.configure(temperature=0.3)
+            result = model.run(
+                [
+                    {"role": "system", "text": "Вы менеджер в компании и готовите коммерческое предложение для клиента. Текст должен быть профессиональным, лаконичным и убедительным."},
+                    {"role": "user", "text": prompt},
+                ]
+            )
+            response_text = result[0]["text"]
         else:
-            raise ValueError("❌ Неподдерживаемый API: используйте 'openai' или 'deepseek'.")
+            raise ValueError("❌ Неподдерживаемый API: используйте 'openai', 'deepseek' или 'yandex'.")
 
-        return response.choices[0].message.content.strip()
+        if api == "yandex":
+            return response_text.strip()
+        else:
+            return response.choices[0].message.content.strip()
 
     except openai.OpenAIError as e:
         logger.error(f"⚠ Ошибка при генерации текста: {str(e)}")

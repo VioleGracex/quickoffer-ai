@@ -9,6 +9,7 @@ class Settings(BaseSettings):
     ALGORITHM: str
     OPENAI_API_KEY: str  # Add the OpenAI API key here
     DEEPSEEK_API_KEY: str  # Add the DeepSeek API key here
+    YANDEX_API_KEY: str  # Add the Yandex API key here
 
     class Config:
         env_file = ".env"

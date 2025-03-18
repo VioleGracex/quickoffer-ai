@@ -1,56 +1,27 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import React, { useState } from 'react';
-import { v4 as uuidv4 } from 'uuid'; // Add this import
+import { v4 as uuidv4 } from 'uuid';
 import PageBreadcrumb from "../../components/common/PageBreadCrumb";
 import PageMeta from "../../components/common/PageMeta";
 import ComponentCard from "../../components/common/ComponentCard";
-import ClientInfoForm from '../../components/AIForm/ClientInfoForm';
 import FileUpload from '../../components/AIForm/FileUpload';
 import GeneratedText from '../../components/AIForm/GeneratedText';
 import ActionButtons from '../../components/AIForm/ActionButtons';
 import ApiModelSelector from '../../components/AIForm/ApiModelSelector';
 import ErrorMessage from '../../components/AIForm/ErrorMessage';
 import { generateProposal, savePdf, sendEmail } from '../../routes/proposal_api';
-
-interface ClientInfo {
-  companyName: string;
-  legalAddress: string;
-  inn: string;
-  bankAccount: string;
-  bankName: string;
-  clientName: string;
-  contactPerson: string;
-  productName: string;
-  pricingPlan: string;
-  quantity: string;
-}
+import PDFViewer from '../PDFViewer'; // Import the custom PDF Viewer component
 
 const OfferAIForm: React.FC = () => {
-  const [clientInfo, setClientInfo] = useState<ClientInfo>({
-    companyName: '',
-    legalAddress: '',
-    inn: '',
-    bankAccount: '',
-    bankName: '',
-    clientName: '',
-    contactPerson: '',
-    productName: '',
-    pricingPlan: '',
-    quantity: '',
-  });
-
   const [templateFile, setTemplateFile] = useState<File | null>(null);
   const [productDataFile, setProductDataFile] = useState<File | null>(null);
   const [generatedText, setGeneratedText] = useState<string>('');
   const [pdfLink, setPdfLink] = useState<string>('');
-  const [model, setModel] = useState<string>('gpt-4-turbo');
-  const [api, setApi] = useState<string>('openai');
+  const [model, setModel] = useState<string>('deepseek-chat');
+  const [api, setApi] = useState<string>('deepseek');
   const [error, setError] = useState<string>('');
-
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    setClientInfo((prev) => ({ ...prev, [name]: value }));
-  };
+  const [activeTab, setActiveTab] = useState<string>("Шаблон КП");
+  const [additionalPrompt, setAdditionalPrompt] = useState<string>('');
 
   const handleApiChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
     const selectedApi = e.target.value;
@@ -69,7 +40,6 @@ const OfferAIForm: React.FC = () => {
 
   const handleGenerateText = async () => {
     const formData = new FormData();
-    appendFormData(formData, 'clientInfo', JSON.stringify(clientInfo));
     appendFormData(formData, 'model', model);
     appendFormData(formData, 'api', api);
     appendFormData(formData, 'requestId', uuidv4()); // Add unique request ID
@@ -114,7 +84,7 @@ const OfferAIForm: React.FC = () => {
     }
 
     try {
-      await sendEmail(clientInfo.clientName, pdfLink);
+      await sendEmail("client@example.com", pdfLink);
       alert('Email успешно отправлен!');
       setError('');
     } catch (error) {
@@ -124,51 +94,72 @@ const OfferAIForm: React.FC = () => {
   };
 
   const isFormValid = () => {
-    const requiredFields = ['companyName', 'inn', 'clientName', 'contactPerson', 'productName', 'pricingPlan', 'quantity'];
-    return requiredFields.every((field) => clientInfo[field as keyof ClientInfo].trim() !== '');
+    return templateFile !== null && productDataFile !== null;
   };
 
-  const fillTestData = () => {
-    setClientInfo({
-      companyName: 'ООО «Ромашка»',
-      legalAddress: 'г. Москва, ул. Ленина, д. 1',
-      inn: '770901001',
-      bankAccount: '4070280102500101584',
-      bankName: 'ООО «Банк RV»',
-      clientName: 'ООО «Ромашка»',
-      contactPerson: 'Иванов Иван Иванович',
-      productName: 'Онлайн-доска',
-      pricingPlan: 'Корпоративный',
-      quantity: '100',
-    });
-  };
   const appendFormData = (formData: FormData, key: string, value: any) => {
     formData.append(key, value);
   };
 
   return (
-    <div className="dark:bg-gray-900 dark:text-white min-h-screen pt-8">
-      <PageMeta title="Создать КП" description="Генерация КП с помощью AI" />
-      <PageBreadcrumb pageTitle="Создать КП" />
-      <ComponentCard title="Создать КП">
-        <div className="max-w-5xl mx-auto dark:text-white p-6">
-          <ClientInfoForm clientInfo={clientInfo} handleInputChange={handleInputChange} fillTestData={fillTestData} />
-          <ApiModelSelector api={api} model={model} handleApiChange={handleApiChange} handleModelChange={handleModelChange} />
-          <FileUpload setTemplateFile={setTemplateFile} setProductDataFile={setProductDataFile} templateFile={templateFile} productDataFile={productDataFile} />
-          <ErrorMessage error={error} />
-          <GeneratedText generatedText={generatedText} setGeneratedText={setGeneratedText} />
-          <ActionButtons
-            templateFile={templateFile}
-            productDataFile={productDataFile}
-            generatedText={generatedText}
-            pdfLink={pdfLink}
-            handleGenerateText={handleGenerateText}
-            handleSavePdf={handleSavePdf}
-            handleSendEmail={handleSendEmail}
-            isFormValid={isFormValid()}
-          />
+    <div className="dark:bg-gray-900 dark:text-white min-h-screen pt-8 flex">
+      {/* Left - PDF Viewer */}
+      <div className="w-3/4 p-4">
+        <PageMeta title="Создать КП" description="Генерация КП с помощью AI" />
+        <PageBreadcrumb pageTitle="Создать КП" />
+        <ComponentCard title="Создать КП">
+          <div className="max-w-5xl mx-auto dark:text-white p-6">
+            <ApiModelSelector api={api} model={model} handleApiChange={handleApiChange} handleModelChange={handleModelChange} />
+            <FileUpload setTemplateFile={setTemplateFile} setProductDataFile={setProductDataFile} templateFile={templateFile} productDataFile={productDataFile} />
+            {templateFile ? (
+              <div className="mt-4 border p-2 bg-white text-black">
+                <PDFViewer file={templateFile} />
+              </div>
+            ) : (
+              <div className="mt-4 border p-2 bg-white text-black">
+                Пожалуйста, загрузите шаблон КП и данные о продукте.
+              </div>
+            )}
+            <ErrorMessage error={error} />
+            <GeneratedText generatedText={generatedText} setGeneratedText={setGeneratedText} />
+            <ActionButtons
+              templateFile={templateFile}
+              productDataFile={productDataFile}
+              generatedText={generatedText}
+              pdfLink={pdfLink}
+              handleGenerateText={handleGenerateText}
+              handleSavePdf={handleSavePdf}
+              handleSendEmail={handleSendEmail}
+              isFormValid={isFormValid()}
+            />
+          </div>
+        </ComponentCard>
+      </div>
+
+      {/* Right - Sidebar */}
+      <div className="w-1/4 p-4 border-l border-gray-700">
+        <h2 className="text-xl font-bold mb-4">Sale Assist</h2>
+        <div className="flex flex-col">
+          {["Шаблон КП", "Мои Товары", "История"].map((tab) => (
+            <button
+              key={tab}
+              className={`w-full text-left py-2 px-4 ${activeTab === tab ? "bg-gray-800 text-white" : "text-gray-700"}`}
+              onClick={() => setActiveTab(tab)}
+            >
+              {tab === "Шаблон КП" && "📄 "}
+              {tab === "Мои Товары" && "📦 "}
+              {tab === "История" && "⏳ "}
+              {tab}
+            </button>
+          ))}
         </div>
-      </ComponentCard>
+        <textarea
+          className="w-full p-2 mt-4 border rounded"
+          placeholder="Дополнительная информация (необязательно)"
+          value={additionalPrompt}
+          onChange={(e) => setAdditionalPrompt(e.target.value)}
+        />
+      </div>
     </div>
   );
 };

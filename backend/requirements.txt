@@ -21,3 +21,4 @@ pandas
 deepseek
 google-cloud-vision
 PyPDF2
+yandex-cloud-ml-sdk

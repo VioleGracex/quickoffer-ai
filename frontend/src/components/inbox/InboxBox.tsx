@@ -30,7 +30,7 @@ export default function InboxBox() {
   };
 
   return (
-    <div className="mx-auto rounded-2xl p-4 border border-gray-200 bg-white w-full max-w-[1280px] text-center">
+    <div className="mx-auto rounded-2xl border border-gray-200 dark:border-gray-800 bg-white dark:bg-gray-900 w-full max-w-[1280px] text-center">
       <InboxTopBar
         emailDetailsView={selectedMail !== null}
         onBack={handleBack}
