@@ -21,7 +21,14 @@ const ApiModelSelector: React.FC<ApiModelSelectorProps> = ({ api, model, handleA
       return (
         <>
           <option value="deepseek-chat">DeepSeek Chat</option>
-          <option value="deepseek-chat-mini">DeepSeek Chat Mini</option>
+          <option value="deepseek-reasoner">DeepSeek Reasoner</option>
+        </>
+      );
+    } else if (api === 'yandex') {
+      return (
+        <>
+          <option value="yandex-gpt">Yandex GPT</option>
+          <option value="yandex-gpt-mini">Yandex GPT Mini</option>
         </>
       );
     }
@@ -34,6 +41,7 @@ const ApiModelSelector: React.FC<ApiModelSelectorProps> = ({ api, model, handleA
         <select value={api} onChange={handleApiChange} className="mt-1 block w-full pl-3 pr-10 py-2 text-base border border-gray-300 dark:border-gray-700 dark:bg-gray-800 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md">
           <option value="openai">OpenAI</option>
           <option value="deepseek">DeepSeek</option>
+          <option value="yandex">Yandex</option>
         </select>
       </div>
       <div className="flex-1">

@@ -7,10 +7,11 @@ from yandex_cloud_ml_sdk import YCloudML
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
-async def generate_proposal_text(template_text, product_data_text, selected_products, model="deepseek-chat", api="deepseek"):
+async def generate_proposal_text(additional_prompt, template_text, product_data_text, selected_products, model="deepseek-chat", api="deepseek"):
     """Генерация текста коммерческого предложения с OpenAI, DeepSeek или Yandex GPT."""
 
     prompt = f"""
+    {additional_prompt}  # Add additional prompt here
     Текст шаблона: {template_text}
     Данные о продуктах: {product_data_text}
     
@@ -40,6 +41,9 @@ async def generate_proposal_text(template_text, product_data_text, selected_prod
 
     logger.info("📌 Начало генерации коммерческого предложения.")
     logger.debug(f"📄 Сгенерированный prompt:\n{prompt}")
+
+    # Printf-like functionality for the prompt
+    print(f"Generated prompt:\n{prompt}")
 
     try:
         if api == "openai":

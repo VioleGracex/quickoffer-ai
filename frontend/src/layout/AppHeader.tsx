@@ -5,7 +5,7 @@ import { ThemeToggleButton } from "../components/common/ThemeToggleButton";
 import NotificationDropdown from "../components/header/NotificationDropdown";
 import UserDropdown from "../components/header/UserDropdown";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faBars, faSearch, faEllipsisV, faTimes} from "@fortawesome/free-solid-svg-icons";
+import { faBars, faSearch, faEllipsisV, faTimes } from "@fortawesome/free-solid-svg-icons";
 
 const AppHeader: React.FC = () => {
   const [isApplicationMenuOpen, setApplicationMenuOpen] = useState(false);
@@ -55,12 +55,12 @@ const AppHeader: React.FC = () => {
 
           <Link to="/" className="lg:hidden">
             <img
-              className="dark:hidden"
+              className="dark:hidden w-8 h-8 sm:w-10 sm:h-10"
               src="./images/logo/logo.webp"
               alt="Логотип"
             />
             <img
-              className="hidden dark:block"
+              className="hidden dark:block w-8 h-8 sm:w-10 sm:h-10"
               src="./images/logo/logo.webp"
               alt="Логотип"
             />

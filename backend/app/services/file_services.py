@@ -1,3 +1,4 @@
+""" backend\app\services\file_services.py """
 import aiofiles
 import tempfile
 import os
@@ -61,7 +62,7 @@ async def read_csv(file_path: str) -> str:
     except pd.errors.EmptyDataError:
         logger.warning("No columns to parse from file")
         return ""
-    return df.to_string()
+    return df.to_string(index=False)
 
 async def read_pdf(file_path: str) -> str:
     """
